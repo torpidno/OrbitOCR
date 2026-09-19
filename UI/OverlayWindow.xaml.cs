@@ -35,18 +35,28 @@ public partial class OverlayWindow : Window
     private readonly SettingsService _settingsService;
     private readonly TrayIconService? _trayIconService;
 
-    private Point _startPoint;
-    private Rect _selectedRect;
-    private bool _isDragging;
+    // Word mapping model in DIP coordinates
+    private record CanvasWord(string Text, Rect CanvasRect, OcrWordBox Original);
+    private List<CanvasWord> _canvasWords = new();
+    private OcrExtractedResult? _fullScanResult;
+
+    // Interaction states
+    private bool _isTextSelecting;
+    private bool _isCircling;
     private bool _isResizing;
     private string? _activeResizeHandle;
-    private Bitmap? _croppedBitmap;
-    private OcrExtractedResult? _lastOcrResult;
+    private Point _startPoint;
 
-    // Freehand Lasso tracking
+    // Selected text state
+    private readonly List<CanvasWord> _selectedWords = new();
+    private string _currentSelectedText = string.Empty;
+
+    // Selected image/circled region state
+    private Rect _circledRect = Rect.Empty;
     private readonly List<Point> _lassoPoints = new();
     private PathGeometry _lassoGeometry = new();
     private PathFigure? _lassoFigure;
+    private Bitmap? _croppedBitmap;
 
     public OverlayWindow(
         Bitmap desktopBitmap,
@@ -65,37 +75,19 @@ public partial class OverlayWindow : Window
         _settingsService = settingsService;
         _trayIconService = trayIconService;
 
-        // Apply default selection mode from settings
-        if (_settingsService.Settings.DefaultSelectionMode == SnipSelectionMode.Lasso)
-        {
-            RadioLasso.IsChecked = true;
-        }
-        else
-        {
-            RadioRect.IsChecked = true;
-        }
-
-        // Set frozen screenshot
+        // Display frozen screenshot
         FrozenScreenImage.Source = ScreenCaptureService.ConvertToBitmapSource(_desktopBitmap);
 
         SourceInitialized += OnSourceInitialized;
         Loaded += OnLoaded;
         KeyDown += OnKeyDown;
 
-        // Mouse events on canvas
         SelectionCanvas.MouseDown += OnCanvasMouseDown;
         SelectionCanvas.MouseMove += OnCanvasMouseMove;
         SelectionCanvas.MouseUp += OnCanvasMouseUp;
 
-        // Hook resize handles
         HookResizeHandles();
-
-        // Hook floating action menu events
         HookActionMenuEvents();
-
-        // Mode toggles
-        RadioRect.Checked += (s, e) => ResetSelection();
-        RadioLasso.Checked += (s, e) => ResetSelection();
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -111,11 +103,48 @@ public partial class OverlayWindow : Window
             SWP_SHOWWINDOW);
     }
 
-    private void OnLoaded(object sender, RoutedEventArgs e)
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         Activate();
         Focus();
         UpdateDimmedMask(Rect.Empty);
+
+        // Immediate background full screen OCR
+        await RunFullScreenScanAsync();
+    }
+
+    private async Task RunFullScreenScanAsync()
+    {
+        try
+        {
+            TxtStatusIcon.Text = "🔍";
+            TxtStatusMessage.Text = "Scanning full screen for text...";
+
+            _fullScanResult = await _ocrService.RecognizeAsync(_desktopBitmap);
+
+            // Map physical pixel word boxes to canvas DIP coordinates
+            double scaleX = (double)_desktopBitmap.Width / ActualWidth;
+            double scaleY = (double)_desktopBitmap.Height / ActualHeight;
+
+            _canvasWords = _fullScanResult.Words.Select(w => new CanvasWord(
+                w.Text,
+                new Rect(
+                    w.Rect.X / scaleX,
+                    w.Rect.Y / scaleY,
+                    w.Rect.Width / scaleX,
+                    w.Rect.Height / scaleY),
+                w
+            )).ToList();
+
+            TxtStatusIcon.Text = "✨";
+            TxtStatusMessage.Text = $"Screen scanned ({_canvasWords.Count} words) • Select text or circle an image";
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OverlayWindow] Full screen scan error: {ex.Message}");
+            TxtStatusIcon.Text = "⭕";
+            TxtStatusMessage.Text = "Circle any area to search with Google Lens";
+        }
     }
 
     private void OnKeyDown(object sender, KeyEventArgs e)
@@ -125,19 +154,9 @@ public partial class OverlayWindow : Window
             CloseAndCleanup();
             e.Handled = true;
         }
-        else if (e.Key == Key.R && Keyboard.Modifiers == ModifierKeys.None)
-        {
-            RadioRect.IsChecked = true;
-            e.Handled = true;
-        }
-        else if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.None)
-        {
-            RadioLasso.IsChecked = true;
-            e.Handled = true;
-        }
         else if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
         {
-            if (_lastOcrResult != null && _lastOcrResult.HasText)
+            if (!string.IsNullOrWhiteSpace(_currentSelectedText))
             {
                 CopyTextAction();
                 e.Handled = true;
@@ -145,25 +164,56 @@ public partial class OverlayWindow : Window
         }
     }
 
-    #region Canvas Mouse & Selection
+    #region Mouse Interactions (Text Selection vs Image Circling)
+
+    private CanvasWord? FindWordAtPoint(Point pt)
+    {
+        // Give a 3px grace margin around words
+        return _canvasWords.FirstOrDefault(w =>
+        {
+            var inflated = w.CanvasRect;
+            inflated.Inflate(3, 3);
+            return inflated.Contains(pt);
+        });
+    }
 
     private void OnCanvasMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
-
-        // Ignore clicks directly inside the floating menu
         if (FloatingActionMenu.IsMouseOver) return;
 
         _startPoint = e.GetPosition(SelectionCanvas);
-        _isDragging = true;
-        _isResizing = false;
+        var wordUnderCursor = FindWordAtPoint(_startPoint);
 
         FloatingActionMenu.Visibility = Visibility.Collapsed;
-        DimensionsBadge.Visibility = Visibility.Visible;
+        HideImageSelectionVisuals();
 
-        if (RadioLasso.IsChecked == true)
+        if (wordUnderCursor != null)
         {
-            // Lasso mode
+            // === MODE 1: TEXT SELECTION ===
+            _isTextSelecting = true;
+            _isCircling = false;
+            _isResizing = false;
+
+            _selectedWords.Clear();
+            _selectedWords.Add(wordUnderCursor);
+
+            RenderSelectedWordsVisuals();
+            UpdateDimmedMaskForWords();
+
+            _currentSelectedText = wordUnderCursor.Text;
+            FloatingActionMenu.ShowForTextSelection(_currentSelectedText, 1);
+            PositionActionMenuForWords();
+        }
+        else
+        {
+            // === MODE 2: IMAGE CIRCLING ===
+            _isCircling = true;
+            _isTextSelecting = false;
+            _isResizing = false;
+
+            ClearTextSelection();
+
             _lassoPoints.Clear();
             _lassoPoints.Add(_startPoint);
 
@@ -173,16 +223,7 @@ public partial class OverlayWindow : Window
             LassoDrawingPath.Data = _lassoGeometry;
             LassoDrawingPath.Visibility = Visibility.Visible;
 
-            SelectionBorder.Visibility = Visibility.Collapsed;
-            HideHandles();
-        }
-        else
-        {
-            // Rectangle mode
-            LassoDrawingPath.Visibility = Visibility.Collapsed;
-            SelectionBorder.Visibility = Visibility.Visible;
-            _selectedRect = new Rect(_startPoint, _startPoint);
-            UpdateSelectionVisuals(_selectedRect);
+            DimensionsBadge.Visibility = Visibility.Visible;
         }
 
         SelectionCanvas.CaptureMouse();
@@ -192,21 +233,53 @@ public partial class OverlayWindow : Window
     {
         var currentPoint = e.GetPosition(SelectionCanvas);
 
-        if (_isResizing && _selectedRect.Width > 0 && _selectedRect.Height > 0)
+        if (_isResizing)
         {
-            ResizeSelection(currentPoint);
+            ResizeCircledImage(currentPoint);
             return;
         }
 
-        if (!_isDragging) return;
-
-        if (RadioLasso.IsChecked == true)
+        if (_isTextSelecting)
         {
-            // Lasso / Circling
+            // Dragging across text words to select phrases or sentences
+            var dragRect = new Rect(
+                Math.Min(_startPoint.X, currentPoint.X),
+                Math.Min(_startPoint.Y, currentPoint.Y),
+                Math.Max(1, Math.Abs(_startPoint.X - currentPoint.X)),
+                Math.Max(1, Math.Abs(_startPoint.Y - currentPoint.Y)));
+
+            // Expand slightly to easily capture adjacent words
+            dragRect.Inflate(4, 4);
+
+            var wordsInSelection = _canvasWords.Where(w => w.CanvasRect.IntersectsWith(dragRect)).ToList();
+
+            if (wordsInSelection.Count > 0)
+            {
+                // Sort words in reading order: top-to-bottom lines, left-to-right
+                wordsInSelection = wordsInSelection
+                    .OrderBy(w => Math.Round(w.CanvasRect.Top / 14.0) * 14.0)
+                    .ThenBy(w => w.CanvasRect.Left)
+                    .ToList();
+
+                _selectedWords.Clear();
+                _selectedWords.AddRange(wordsInSelection);
+
+                RenderSelectedWordsVisuals();
+                UpdateDimmedMaskForWords();
+
+                _currentSelectedText = string.Join(" ", _selectedWords.Select(w => w.Text));
+                FloatingActionMenu.ShowForTextSelection(_currentSelectedText, _selectedWords.Count);
+                PositionActionMenuForWords();
+            }
+            return;
+        }
+
+        if (_isCircling)
+        {
+            // Circling an image / freehand lasso
             _lassoPoints.Add(currentPoint);
             _lassoFigure?.Segments.Add(new LineSegment(currentPoint, true));
 
-            // Compute live bounding box of lasso for mask cutout
             var minX = _lassoPoints.Min(p => p.X);
             var minY = _lassoPoints.Min(p => p.Y);
             var maxX = _lassoPoints.Max(p => p.X);
@@ -215,21 +288,28 @@ public partial class OverlayWindow : Window
             var previewRect = new Rect(minX, minY, Math.Max(1, maxX - minX), Math.Max(1, maxY - minY));
             UpdateDimmedMask(previewRect);
             UpdateDimensionsBadge(previewRect);
+            return;
+        }
+
+        // Hover effect when mouse is moving freely
+        var hoveredWord = FindWordAtPoint(currentPoint);
+        if (hoveredWord != null)
+        {
+            Cursor = Cursors.IBeam;
+            Canvas.SetLeft(HoverWordBorder, hoveredWord.CanvasRect.Left - 2);
+            Canvas.SetTop(HoverWordBorder, hoveredWord.CanvasRect.Top - 1);
+            HoverWordBorder.Width = hoveredWord.CanvasRect.Width + 4;
+            HoverWordBorder.Height = hoveredWord.CanvasRect.Height + 2;
+            HoverWordBorder.Visibility = Visibility.Visible;
         }
         else
         {
-            // Standard rectangle
-            double x = Math.Min(_startPoint.X, currentPoint.X);
-            double y = Math.Min(_startPoint.Y, currentPoint.Y);
-            double width = Math.Abs(_startPoint.X - currentPoint.X);
-            double height = Math.Abs(_startPoint.Y - currentPoint.Y);
-
-            _selectedRect = new Rect(x, y, width, height);
-            UpdateSelectionVisuals(_selectedRect);
+            Cursor = Cursors.Cross;
+            HoverWordBorder.Visibility = Visibility.Collapsed;
         }
     }
 
-    private async void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left) return;
 
@@ -238,18 +318,35 @@ public partial class OverlayWindow : Window
             _isResizing = false;
             _activeResizeHandle = null;
             SelectionCanvas.ReleaseMouseCapture();
-            await ProcessSelectionAsync();
+            ProcessCircledImage();
             return;
         }
 
-        if (!_isDragging) return;
-
-        _isDragging = false;
-        SelectionCanvas.ReleaseMouseCapture();
-
-        if (RadioLasso.IsChecked == true && _lassoPoints.Count > 2)
+        if (_isTextSelecting)
         {
-            // Convert lasso points to tight bounding box with padding
+            _isTextSelecting = false;
+            SelectionCanvas.ReleaseMouseCapture();
+
+            if (_selectedWords.Count > 0)
+            {
+                PositionActionMenuForWords();
+
+                if (_settingsService.Settings.AutoCopyOnSnip)
+                {
+                    CopyTextAction();
+                }
+            }
+            return;
+        }
+
+        if (!_isCircling) return;
+
+        _isCircling = false;
+        SelectionCanvas.ReleaseMouseCapture();
+        LassoDrawingPath.Visibility = Visibility.Collapsed;
+
+        if (_lassoPoints.Count > 2)
+        {
             double minX = _lassoPoints.Min(p => p.X) - 6;
             double minY = _lassoPoints.Min(p => p.Y) - 6;
             double maxX = _lassoPoints.Max(p => p.X) + 6;
@@ -260,36 +357,144 @@ public partial class OverlayWindow : Window
             maxX = Math.Min(SelectionCanvas.ActualWidth, maxX);
             maxY = Math.Min(SelectionCanvas.ActualHeight, maxY);
 
-            _selectedRect = new Rect(minX, minY, Math.Max(20, maxX - minX), Math.Max(20, maxY - minY));
-            LassoDrawingPath.Visibility = Visibility.Collapsed;
-            SelectionBorder.Visibility = Visibility.Visible;
-            UpdateSelectionVisuals(_selectedRect);
-        }
+            _circledRect = new Rect(minX, minY, Math.Max(20, maxX - minX), Math.Max(20, maxY - minY));
 
-        if (_selectedRect.Width < 10 || _selectedRect.Height < 10)
-        {
-            ResetSelection();
-            return;
-        }
+            if (_circledRect.Width < 12 || _circledRect.Height < 12)
+            {
+                HideImageSelectionVisuals();
+                UpdateDimmedMask(Rect.Empty);
+                return;
+            }
 
-        ShowHandles();
-        await ProcessSelectionAsync();
+            ShowImageSelectionVisuals(_circledRect);
+            ProcessCircledImage();
+        }
     }
 
     #endregion
 
-    #region Visuals & Layout
+    #region Text Visuals
 
-    private void UpdateSelectionVisuals(Rect rect)
+    private void RenderSelectedWordsVisuals()
+    {
+        SelectedWordsCanvas.Children.Clear();
+
+        foreach (var word in _selectedWords)
+        {
+            var highlight = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(90, 59, 130, 246)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 96, 165, 250)),
+                BorderThickness = new Thickness(1.5),
+                CornerRadius = new CornerRadius(3),
+                Width = word.CanvasRect.Width + 4,
+                Height = word.CanvasRect.Height + 2
+            };
+
+            Canvas.SetLeft(highlight, word.CanvasRect.Left - 2);
+            Canvas.SetTop(highlight, word.CanvasRect.Top - 1);
+            SelectedWordsCanvas.Children.Add(highlight);
+        }
+    }
+
+    private void UpdateDimmedMaskForWords()
+    {
+        if (_selectedWords.Count == 0)
+        {
+            UpdateDimmedMask(Rect.Empty);
+            return;
+        }
+
+        double minX = _selectedWords.Min(w => w.CanvasRect.Left) - 4;
+        double minY = _selectedWords.Min(w => w.CanvasRect.Top) - 2;
+        double maxX = _selectedWords.Max(w => w.CanvasRect.Right) + 4;
+        double maxY = _selectedWords.Max(w => w.CanvasRect.Bottom) + 2;
+
+        var bounds = new Rect(minX, minY, Math.Max(1, maxX - minX), Math.Max(1, maxY - minY));
+        UpdateDimmedMask(bounds);
+    }
+
+    private void PositionActionMenuForWords()
+    {
+        if (_selectedWords.Count == 0) return;
+
+        double minX = _selectedWords.Min(w => w.CanvasRect.Left);
+        double minY = _selectedWords.Min(w => w.CanvasRect.Top);
+        double maxX = _selectedWords.Max(w => w.CanvasRect.Right);
+        double maxY = _selectedWords.Max(w => w.CanvasRect.Bottom);
+
+        var bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
+        PositionActionMenu(bounds);
+    }
+
+    private void ClearTextSelection()
+    {
+        _selectedWords.Clear();
+        SelectedWordsCanvas.Children.Clear();
+        _currentSelectedText = string.Empty;
+    }
+
+    #endregion
+
+    #region Image Selection & Circling
+
+    private void ProcessCircledImage()
+    {
+        if (_circledRect.Width <= 4 || _circledRect.Height <= 4) return;
+
+        double scaleX = (double)_desktopBitmap.Width / SelectionCanvas.ActualWidth;
+        double scaleY = (double)_desktopBitmap.Height / SelectionCanvas.ActualHeight;
+
+        int cropX = (int)Math.Round(_circledRect.X * scaleX);
+        int cropY = (int)Math.Round(_circledRect.Y * scaleY);
+        int cropW = (int)Math.Round(_circledRect.Width * scaleX);
+        int cropH = (int)Math.Round(_circledRect.Height * scaleY);
+
+        var cropRect = new Rectangle(cropX, cropY, cropW, cropH);
+
+        _croppedBitmap?.Dispose();
+        _croppedBitmap = ScreenCaptureService.CropBitmap(_desktopBitmap, cropRect);
+
+        if (_croppedBitmap == null) return;
+
+        // Check if any recognized text is inside the circled region
+        var wordsInside = _canvasWords
+            .Where(w => _circledRect.Contains(w.CanvasRect))
+            .OrderBy(w => Math.Round(w.CanvasRect.Top / 14.0) * 14.0)
+            .ThenBy(w => w.CanvasRect.Left)
+            .Select(w => w.Text)
+            .ToList();
+
+        string? textInside = wordsInside.Count > 0 ? string.Join(" ", wordsInside) : null;
+        if (!string.IsNullOrEmpty(textInside))
+        {
+            _currentSelectedText = textInside;
+        }
+
+        // Show menu in IMAGE MODE
+        FloatingActionMenu.ShowForImageSelection(cropW, cropH, textInside);
+        PositionActionMenu(_circledRect);
+    }
+
+    private void ShowImageSelectionVisuals(Rect rect)
     {
         Canvas.SetLeft(SelectionBorder, rect.X);
         Canvas.SetTop(SelectionBorder, rect.Y);
         SelectionBorder.Width = Math.Max(0, rect.Width);
         SelectionBorder.Height = Math.Max(0, rect.Height);
+        SelectionBorder.Visibility = Visibility.Visible;
 
         UpdateDimmedMask(rect);
         UpdateHandlesPosition(rect);
         UpdateDimensionsBadge(rect);
+        ShowHandles();
+    }
+
+    private void HideImageSelectionVisuals()
+    {
+        SelectionBorder.Visibility = Visibility.Collapsed;
+        DimensionsBadge.Visibility = Visibility.Collapsed;
+        HideHandles();
     }
 
     private void UpdateDimmedMask(Rect cutout)
@@ -303,7 +508,7 @@ public partial class OverlayWindow : Window
 
         if (cutout.Width > 0 && cutout.Height > 0)
         {
-            var cutoutGeo = new RectangleGeometry(cutout, 4, 4);
+            var cutoutGeo = new RectangleGeometry(cutout, 6, 6);
             DimmedMaskPath.Data = new CombinedGeometry(GeometryCombineMode.Exclude, fullRectGeo, cutoutGeo);
         }
         else
@@ -323,62 +528,42 @@ public partial class OverlayWindow : Window
         DimensionsBadge.Visibility = Visibility.Visible;
         DimensionsText.Text = $"{(int)rect.Width} × {(int)rect.Height} px";
 
-        // Place badge above selection if space permits, otherwise below
         double badgeX = rect.Left;
         double badgeY = rect.Top - 26;
-
-        if (badgeY < 10)
-        {
-            badgeY = rect.Bottom + 6;
-        }
+        if (badgeY < 10) badgeY = rect.Bottom + 6;
 
         Canvas.SetLeft(DimensionsBadge, Math.Max(4, badgeX));
         Canvas.SetTop(DimensionsBadge, Math.Max(4, badgeY));
     }
 
-    private void PositionActionMenu(Rect rect)
+    private void PositionActionMenu(Rect anchor)
     {
         FloatingActionMenu.Visibility = Visibility.Visible;
         FloatingActionMenu.UpdateLayout();
 
-        double menuW = 460;
+        double menuW = 480;
         double menuH = 110;
 
-        // Preferred: directly below selection
-        double menuX = rect.Left + (rect.Width - menuW) / 2.0;
-        double menuY = rect.Bottom + 12;
+        double menuX = anchor.Left + (anchor.Width - menuW) / 2.0;
+        double menuY = anchor.Bottom + 12;
 
-        // Keep within horizontal canvas boundaries
         if (menuX < 12) menuX = 12;
         if (menuX + menuW > SelectionCanvas.ActualWidth - 12)
         {
             menuX = SelectionCanvas.ActualWidth - menuW - 12;
         }
 
-        // If not enough vertical space below, place above selection
         if (menuY + menuH > SelectionCanvas.ActualHeight - 20)
         {
-            menuY = rect.Top - menuH - 12;
+            menuY = anchor.Top - menuH - 12;
             if (menuY < 10)
             {
-                // Fallback: clamp inside
                 menuY = Math.Max(10, SelectionCanvas.ActualHeight - menuH - 20);
             }
         }
 
         Canvas.SetLeft(FloatingActionMenu, menuX);
         Canvas.SetTop(FloatingActionMenu, menuY);
-    }
-
-    private void ResetSelection()
-    {
-        _selectedRect = Rect.Empty;
-        SelectionBorder.Visibility = Visibility.Collapsed;
-        LassoDrawingPath.Visibility = Visibility.Collapsed;
-        DimensionsBadge.Visibility = Visibility.Collapsed;
-        FloatingActionMenu.Visibility = Visibility.Collapsed;
-        HideHandles();
-        UpdateDimmedMask(Rect.Empty);
     }
 
     #endregion
@@ -397,19 +582,20 @@ public partial class OverlayWindow : Window
     {
         if (e.ChangedButton != MouseButton.Left) return;
         _isResizing = true;
-        _isDragging = false;
+        _isCircling = false;
+        _isTextSelecting = false;
         _activeResizeHandle = handleName;
         FloatingActionMenu.Visibility = Visibility.Collapsed;
         SelectionCanvas.CaptureMouse();
         e.Handled = true;
     }
 
-    private void ResizeSelection(Point pt)
+    private void ResizeCircledImage(Point pt)
     {
-        double left = _selectedRect.Left;
-        double top = _selectedRect.Top;
-        double right = _selectedRect.Right;
-        double bottom = _selectedRect.Bottom;
+        double left = _circledRect.Left;
+        double top = _circledRect.Top;
+        double right = _circledRect.Right;
+        double bottom = _circledRect.Bottom;
 
         switch (_activeResizeHandle)
         {
@@ -431,8 +617,8 @@ public partial class OverlayWindow : Window
                 break;
         }
 
-        _selectedRect = new Rect(left, top, right - left, bottom - top);
-        UpdateSelectionVisuals(_selectedRect);
+        _circledRect = new Rect(left, top, right - left, bottom - top);
+        ShowImageSelectionVisuals(_circledRect);
     }
 
     private void UpdateHandlesPosition(Rect rect)
@@ -468,59 +654,25 @@ public partial class OverlayWindow : Window
 
     #endregion
 
-    #region OCR & Actions
-
-    private async Task ProcessSelectionAsync()
-    {
-        if (_selectedRect.Width <= 4 || _selectedRect.Height <= 4) return;
-
-        // Map WPF DIP coordinates to physical desktop bitmap pixels
-        double scaleX = (double)_desktopBitmap.Width / SelectionCanvas.ActualWidth;
-        double scaleY = (double)_desktopBitmap.Height / SelectionCanvas.ActualHeight;
-
-        int cropX = (int)Math.Round(_selectedRect.X * scaleX);
-        int cropY = (int)Math.Round(_selectedRect.Y * scaleY);
-        int cropW = (int)Math.Round(_selectedRect.Width * scaleX);
-        int cropH = (int)Math.Round(_selectedRect.Height * scaleY);
-
-        var cropRect = new Rectangle(cropX, cropY, cropW, cropH);
-
-        _croppedBitmap?.Dispose();
-        _croppedBitmap = ScreenCaptureService.CropBitmap(_desktopBitmap, cropRect);
-
-        if (_croppedBitmap == null) return;
-
-        PositionActionMenu(_selectedRect);
-        FloatingActionMenu.SetLoading();
-
-        // Perform offline WinRT OCR in background
-        _lastOcrResult = await _ocrService.RecognizeAsync(_croppedBitmap);
-
-        FloatingActionMenu.SetOcrResult(_lastOcrResult);
-
-        // Auto copy if enabled in settings
-        if (_settingsService.Settings.AutoCopyOnSnip && _lastOcrResult.HasText)
-        {
-            CopyTextAction();
-        }
-    }
+    #region Action Menu Execution
 
     private void HookActionMenuEvents()
     {
         FloatingActionMenu.CopyTextRequested += CopyTextAction;
         FloatingActionMenu.SearchGoogleRequested += SearchGoogleAction;
         FloatingActionMenu.SearchLensRequested += SearchLensAction;
+        FloatingActionMenu.CopyImageRequested += CopyImageAction;
         FloatingActionMenu.SaveImageRequested += SaveImageAction;
         FloatingActionMenu.CloseRequested += CloseAndCleanup;
     }
 
     private void CopyTextAction()
     {
-        if (_lastOcrResult == null || !_lastOcrResult.HasText) return;
+        if (string.IsNullOrWhiteSpace(_currentSelectedText)) return;
 
         try
         {
-            Clipboard.SetText(_lastOcrResult.FullText);
+            Clipboard.SetText(_currentSelectedText);
             _soundService.PlayCopySuccess();
             _trayIconService?.ShowNotification("OrbitOCR", "✓ Copied text to clipboard!");
         }
@@ -534,11 +686,11 @@ public partial class OverlayWindow : Window
 
     private void SearchGoogleAction()
     {
-        if (_lastOcrResult == null || !_lastOcrResult.HasText) return;
+        if (string.IsNullOrWhiteSpace(_currentSelectedText)) return;
 
         try
         {
-            string query = Uri.EscapeDataString(_lastOcrResult.FullText);
+            string query = Uri.EscapeDataString(_currentSelectedText);
             string url = $"https://www.google.com/search?q={query}";
             Process.Start(new ProcessStartInfo
             {
@@ -560,21 +712,18 @@ public partial class OverlayWindow : Window
 
         try
         {
-            // Save cropped image to temp file
-            string tempDir = Path.Combine(Path.GetTempPath(), "OrbitOCR");
+            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "OrbitOCR");
             if (!Directory.Exists(tempDir))
             {
                 Directory.CreateDirectory(tempDir);
             }
 
-            string tempFile = Path.Combine(tempDir, $"snip_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+            string tempFile = System.IO.Path.Combine(tempDir, $"snip_{DateTime.Now:yyyyMMdd_HHmmss}.png");
             _croppedBitmap.Save(tempFile, ImageFormat.Png);
 
-            // Also copy the image to clipboard so user can instantly Ctrl+V into Google Lens / Discord / Slack
             var bitmapSource = ScreenCaptureService.ConvertToBitmapSource(_croppedBitmap);
             Clipboard.SetImage(bitmapSource);
 
-            // Open Google Lens in browser
             Process.Start(new ProcessStartInfo
             {
                 FileName = "https://lens.google.com/",
@@ -586,6 +735,25 @@ public partial class OverlayWindow : Window
         catch (Exception ex)
         {
             Debug.WriteLine($"[OverlayWindow] SearchLens failed: {ex.Message}");
+        }
+
+        CloseAndCleanup();
+    }
+
+    private void CopyImageAction()
+    {
+        if (_croppedBitmap == null) return;
+
+        try
+        {
+            var bitmapSource = ScreenCaptureService.ConvertToBitmapSource(_croppedBitmap);
+            Clipboard.SetImage(bitmapSource);
+            _soundService.PlayCopySuccess();
+            _trayIconService?.ShowNotification("OrbitOCR", "✓ Image copied to clipboard!");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OverlayWindow] CopyImage failed: {ex.Message}");
         }
 
         CloseAndCleanup();
@@ -639,10 +807,11 @@ public partial class OverlayWindow : Window
         _desktopBitmap.Dispose();
         _croppedBitmap?.Dispose();
 
-        // Release WPF image source bindings to prevent leaks
         FrozenScreenImage.Source = null;
+        SelectedWordsCanvas.Children.Clear();
+        _canvasWords.Clear();
+        _selectedWords.Clear();
 
-        // Force GC and trim working set memory down to <30 MB idle
         GC.Collect(2, GCCollectionMode.Aggressive, true, true);
         GC.WaitForPendingFinalizers();
         SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);

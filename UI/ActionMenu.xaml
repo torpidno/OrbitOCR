@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
-             d:DesignWidth="480" d:DesignHeight="120">
+             d:DesignWidth="500" d:DesignHeight="120">
 
     <UserControl.Resources>
-        <!-- Button Style -->
+        <!-- Standard Button Style -->
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#2A2E3D"/>
             <Setter Property="Foreground" Value="#F3F4F6"/>
@@ -47,8 +47,8 @@
             </Setter>
         </Style>
 
-        <!-- Primary Accent Button Style -->
-        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+        <!-- Primary Blue Accent Button (For Text Copy) -->
+        <Style x:Key="PrimaryBlueButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
             <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="BorderBrush" Value="#3B82F6"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -71,6 +71,37 @@
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#1E40AF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Purple/Lens Accent Button (For Image/Lens Search) -->
+        <Style x:Key="PrimaryPurpleButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Background" Value="#7C3AED"/>
+            <Setter Property="BorderBrush" Value="#A78BFA"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="16"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#6D28D9"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#C4B5FD"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#5B21B6"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -102,36 +133,35 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Main Floating Container with Glow Shadow -->
-    <Border Background="#181A24"
-            BorderBrush="#3B4254"
+    <!-- Main Floating Container with Pixel Glow Shadow -->
+    <Border Background="#161822"
+            BorderBrush="#384055"
             BorderThickness="1"
             CornerRadius="18"
             Padding="12,10"
             Margin="6">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="4" Opacity="0.6"/>
+            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="4" Opacity="0.7"/>
         </Border.Effect>
 
-        <StackPanel Orientation="Vertical" Width="440">
-            <!-- Header: Status / Preview -->
+        <StackPanel Orientation="Vertical" Width="460">
+            <!-- Header: Mode Badge & Preview -->
             <Grid Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Status & Text Snippet -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border x:Name="BadgeBorder" Background="#22304A" CornerRadius="10" Padding="6,2" Margin="0,0,8,0">
-                        <TextBlock x:Name="StatusBadge" Text="⚡ Recognizing..." FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
+                    <Border x:Name="BadgeBorder" Background="#22304A" CornerRadius="10" Padding="8,3" Margin="0,0,8,0">
+                        <TextBlock x:Name="StatusBadge" Text="📝 Text Selected" FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
                     </Border>
                     <TextBlock x:Name="TextPreview" 
-                               Text="Detecting text..." 
+                               Text="Select any text or circle an image" 
                                FontSize="12" 
-                               Foreground="#D1D5DB" 
+                               Foreground="#E2E8F0" 
                                TextTrimming="CharacterEllipsis" 
-                               MaxWidth="310" 
+                               MaxWidth="320" 
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
@@ -142,16 +172,25 @@
             </Grid>
 
             <!-- Separator Line -->
-            <Rectangle Height="1" Fill="#2A2F40" Margin="0,0,0,8"/>
+            <Rectangle Height="1" Fill="#272D3D" Margin="0,0,0,8"/>
 
             <!-- Action Buttons Row -->
             <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <!-- Copy Text -->
-                <Button x:Name="BtnCopyText" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,6,0">
+                <!-- Search Google Lens (Primary for Image Mode) -->
+                <Button x:Name="BtnSearchLens" Style="{StaticResource PrimaryPurpleButtonStyle}" Margin="0,0,6,0" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 2,5 L 4,2 L 10,2 L 12,5 L 13,5 A 1,1 0 0 1 14,6 L 14,12 A 1,1 0 0 1 13,13 L 1,13 A 1,1 0 0 1 0,12 L 0,6 A 1,1 0 0 1 1,5 Z M 7,5.5 A 2.5,2.5 0 1 0 7,10.5 A 2.5,2.5 0 1 0 7,5.5"
+                              Stroke="White" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search with Lens"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Copy Text (Primary for Text Mode) -->
+                <Button x:Name="BtnCopyText" Style="{StaticResource PrimaryBlueButtonStyle}" Margin="0,0,6,0">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 3,5 A 2,2 0 0 1 5,3 L 11,3 A 2,2 0 0 1 13,5 L 13,11 A 2,2 0 0 1 11,13 L 5,13 A 2,2 0 0 1 3,11 Z M 5,1 L 11,1 A 2,2 0 0 1 13,3"
                               Stroke="White" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Copy Text"/>
+                        <TextBlock x:Name="TxtBtnCopyText" Text="Copy Text"/>
                     </StackPanel>
                 </Button>
 
@@ -164,17 +203,17 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Search Lens / Image -->
-                <Button x:Name="BtnSearchLens" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0">
+                <!-- Copy Image Bitmap -->
+                <Button x:Name="BtnCopyImage" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="M 2,5 L 4,2 L 10,2 L 12,5 L 13,5 A 1,1 0 0 1 14,6 L 14,12 A 1,1 0 0 1 13,13 L 1,13 A 1,1 0 0 1 0,12 L 0,6 A 1,1 0 0 1 1,5 Z M 7,5.5 A 2.5,2.5 0 1 0 7,10.5 A 2.5,2.5 0 1 0 7,5.5"
-                              Stroke="#A78BFA" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Search Lens"/>
+                        <Path Data="M 2,2 L 12,2 L 12,12 L 2,12 Z M 4,8 L 6,6 L 8,9 L 10,5 L 12,8"
+                              Stroke="#38BDF8" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Copy Image"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Save Image -->
-                <Button x:Name="BtnSaveImage" Style="{StaticResource ActionButtonStyle}" ToolTip="Save snippet image to disk">
+                <Button x:Name="BtnSaveImage" Style="{StaticResource ActionButtonStyle}" ToolTip="Save image to file" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 2,2 L 10,2 L 12,4 L 12,12 L 2,12 Z M 4,2 L 4,5 L 10,5 L 10,2 M 4,8 L 10,8 L 10,12 L 4,12"
                               Stroke="#34D399" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>

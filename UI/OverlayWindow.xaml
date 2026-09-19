@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="clr-namespace:OrbitOCR.UI"
         mc:Ignorable="d"
-        Title="OrbitOCR Snip"
+        Title="OrbitOCR Circle to Search"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -19,7 +19,7 @@
         <Image x:Name="FrozenScreenImage" Stretch="Fill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
         <!-- Layer 2: Dimmed Overlay with Cutout Mask -->
-        <Path x:Name="DimmedMaskPath" Fill="#70000000"/>
+        <Path x:Name="DimmedMaskPath" Fill="#60000000"/>
 
         <!-- Layer 3: Interactive Selection Canvas -->
         <Canvas x:Name="SelectionCanvas" 
@@ -27,102 +27,105 @@
                 HorizontalAlignment="Stretch" 
                 VerticalAlignment="Stretch">
 
-            <!-- Freehand Lasso Drawing Path (Glowing Neon Line) -->
-            <Path x:Name="LassoDrawingPath" 
-                  Stroke="#60A5FA" 
-                  StrokeThickness="3" 
-                  StrokeLineJoin="Round" 
-                  StrokeStartLineCap="Round" 
-                  StrokeEndLineCap="Round"
-                  Visibility="Collapsed">
-                <Path.Effect>
-                    <DropShadowEffect Color="#38BDF8" BlurRadius="12" ShadowDepth="0" Opacity="0.9"/>
-                </Path.Effect>
-            </Path>
-
-            <!-- Selection Box Border -->
-            <Border x:Name="SelectionBorder"
-                    BorderBrush="#3B82F6"
-                    BorderThickness="2"
-                    Background="Transparent"
-                    CornerRadius="2"
-                    Visibility="Collapsed">
+            <!-- Hover Word Highlight (Shows user which word is under cursor) -->
+            <Border x:Name="HoverWordBorder"
+                    Background="#3560A5FA"
+                    BorderBrush="#9060A5FA"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
                 <Border.Effect>
-                    <DropShadowEffect Color="#1D4ED8" BlurRadius="10" ShadowDepth="0" Opacity="0.8"/>
+                    <DropShadowEffect Color="#38BDF8" BlurRadius="6" ShadowDepth="0" Opacity="0.7"/>
                 </Border.Effect>
             </Border>
 
-            <!-- Corner Resize Handles -->
-            <!-- Top-Left -->
-            <Border x:Name="HandleTopLeft" Width="10" Height="10" Background="White" BorderBrush="#3B82F6" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
-            <!-- Top-Right -->
-            <Border x:Name="HandleTopRight" Width="10" Height="10" Background="White" BorderBrush="#3B82F6" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
-            <!-- Bottom-Left -->
-            <Border x:Name="HandleBottomLeft" Width="10" Height="10" Background="White" BorderBrush="#3B82F6" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
-            <!-- Bottom-Right -->
-            <Border x:Name="HandleBottomRight" Width="10" Height="10" Background="White" BorderBrush="#3B82F6" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
+            <!-- Active Selected Words Container -->
+            <Canvas x:Name="SelectedWordsCanvas" IsHitTestVisible="False"/>
 
-            <!-- Selection Dimensions Badge -->
+            <!-- Freehand Lasso / Circle Drawing Path (Glowing Neon Line) -->
+            <Path x:Name="LassoDrawingPath" 
+                  Stroke="#38BDF8" 
+                  StrokeThickness="3.5" 
+                  StrokeLineJoin="Round" 
+                  StrokeStartLineCap="Round" 
+                  StrokeEndLineCap="Round"
+                  Visibility="Collapsed"
+                  IsHitTestVisible="False">
+                <Path.Effect>
+                    <DropShadowEffect Color="#818CF8" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/>
+                </Path.Effect>
+            </Path>
+
+            <!-- Image Selection Box Border -->
+            <Border x:Name="SelectionBorder"
+                    BorderBrush="#818CF8"
+                    BorderThickness="2"
+                    Background="Transparent"
+                    CornerRadius="3"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
+                <Border.Effect>
+                    <DropShadowEffect Color="#6366F1" BlurRadius="12" ShadowDepth="0" Opacity="0.8"/>
+                </Border.Effect>
+            </Border>
+
+            <!-- Corner Resize Handles (For fine-tuning circled region) -->
+            <Border x:Name="HandleTopLeft" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
+            <Border x:Name="HandleTopRight" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
+            <Border x:Name="HandleBottomLeft" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
+            <Border x:Name="HandleBottomRight" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
+
+            <!-- Image Dimensions Badge -->
             <Border x:Name="DimensionsBadge"
-                    Background="#CC111827"
-                    BorderBrush="#374151"
+                    Background="#DD0F172A"
+                    BorderBrush="#334155"
                     BorderThickness="1"
                     CornerRadius="6"
                     Padding="6,2"
-                    Visibility="Collapsed">
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
                 <TextBlock x:Name="DimensionsText"
                            FontSize="11"
                            FontWeight="SemiBold"
-                           Foreground="#93C5FD"
-                           Text="0 × 0"/>
+                           Foreground="#C4B5FD"
+                           Text="0 × 0 px"/>
             </Border>
 
-            <!-- Floating Action Menu -->
+            <!-- Floating Action Pill Menu -->
             <ui:ActionMenu x:Name="FloatingActionMenu" Visibility="Collapsed"/>
         </Canvas>
 
-        <!-- Top Mode Selector & Help Pill -->
+        <!-- Top Android-style Status & Guide Pill -->
         <Border HorizontalAlignment="Center" 
                 VerticalAlignment="Top" 
-                Margin="0,20,0,0"
-                Background="#DD111827"
-                BorderBrush="#374151"
+                Margin="0,18,0,0"
+                Background="#EE0F172A"
+                BorderBrush="#334155"
                 BorderThickness="1"
                 CornerRadius="20"
-                Padding="12,6">
+                Padding="16,8">
             <Border.Effect>
-                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2" Opacity="0.5"/>
+                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2" Opacity="0.6"/>
             </Border.Effect>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Mode: Rectangle -->
-                <RadioButton x:Name="RadioRect" 
-                             Content="⬛  Rectangle (R)" 
-                             GroupName="SnipMode" 
-                             Foreground="#E5E7EB" 
-                             FontSize="12" 
-                             FontWeight="SemiBold" 
-                             IsChecked="True" 
-                             Cursor="Hand"
-                             Margin="0,0,12,0" 
-                             VerticalAlignment="Center"/>
+                <!-- Status Icon -->
+                <TextBlock x:Name="TxtStatusIcon" Text="🔍" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
 
-                <!-- Mode: Circle / Lasso -->
-                <RadioButton x:Name="RadioLasso" 
-                             Content="⭕  Circle / Lasso (C)" 
-                             GroupName="SnipMode" 
-                             Foreground="#E5E7EB" 
-                             FontSize="12" 
-                             FontWeight="SemiBold" 
-                             Cursor="Hand"
-                             Margin="0,0,14,0" 
-                             VerticalAlignment="Center"/>
+                <!-- Main Status Text -->
+                <TextBlock x:Name="TxtStatusMessage" 
+                           Text="Scanning screen for text..." 
+                           Foreground="#F1F5F9" 
+                           FontSize="12" 
+                           FontWeight="SemiBold" 
+                           VerticalAlignment="Center"/>
 
-                <Rectangle Width="1" Height="14" Fill="#4B5563" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <Rectangle Width="1" Height="14" Fill="#475569" Margin="14,0,14,0" VerticalAlignment="Center"/>
 
-                <!-- Shortcut Hint -->
-                <TextBlock Text="Drag to select • Esc to cancel" 
-                           Foreground="#9CA3AF" 
+                <!-- Hint -->
+                <TextBlock Text="Select text directly • Circle any image to search • Esc to exit" 
+                           Foreground="#94A3B8" 
                            FontSize="11" 
                            VerticalAlignment="Center"/>
             </StackPanel>

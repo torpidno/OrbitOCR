@@ -92,18 +92,41 @@ public class OcrService
             var ocrResult = await _engine.RecognizeAsync(softwareBitmap);
 
             var lines = new List<string>();
+            var wordBoxes = new List<OcrWordBox>();
+            var lineBoxes = new List<OcrLineBox>();
             var textBuilder = new StringBuilder();
             int wordCount = 0;
 
             foreach (var line in ocrResult.Lines)
             {
+                var lineWords = new List<OcrWordBox>();
+                double lineMinX = double.MaxValue, lineMinY = double.MaxValue;
+                double lineMaxX = double.MinValue, lineMaxY = double.MinValue;
+
+                foreach (var word in line.Words)
+                {
+                    var r = word.BoundingRect;
+                    var wordRect = new System.Windows.Rect(r.X, r.Y, r.Width, r.Height);
+                    var wordBox = new OcrWordBox(word.Text, wordRect);
+                    lineWords.Add(wordBox);
+                    wordBoxes.Add(wordBox);
+
+                    lineMinX = Math.Min(lineMinX, r.X);
+                    lineMinY = Math.Min(lineMinY, r.Y);
+                    lineMaxX = Math.Max(lineMaxX, r.X + r.Width);
+                    lineMaxY = Math.Max(lineMaxY, r.Y + r.Height);
+                }
+
                 // Reconstruct line text preserving spacing between words
                 var wordsInLine = line.Words.Select(w => w.Text);
                 var formattedLine = string.Join(" ", wordsInLine).Trim();
-                
-                // If line.Text is already populated and clean, use it
                 var textToUse = !string.IsNullOrWhiteSpace(formattedLine) ? formattedLine : line.Text;
 
+                var lineRect = lineWords.Count > 0
+                    ? new System.Windows.Rect(lineMinX, lineMinY, Math.Max(1, lineMaxX - lineMinX), Math.Max(1, lineMaxY - lineMinY))
+                    : System.Windows.Rect.Empty;
+
+                lineBoxes.Add(new OcrLineBox(textToUse, lineRect, lineWords));
                 lines.Add(textToUse);
                 textBuilder.AppendLine(textToUse);
                 wordCount += line.Words.Count;
@@ -113,6 +136,8 @@ public class OcrService
             {
                 FullText = textBuilder.ToString().TrimEnd(),
                 Lines = lines,
+                Words = wordBoxes,
+                LineBoxes = lineBoxes,
                 WordCount = wordCount,
                 TextAngle = ocrResult.TextAngle,
                 LanguageTag = _engine.RecognizerLanguage.LanguageTag

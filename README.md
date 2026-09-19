@@ -24,21 +24,26 @@ Using Windows' native offline OCR engine (`Windows.Media.Ocr.OcrEngine`), OrbitO
 - **🖥️ Multi-Monitor Virtual Desktop Capture**
   - Instantly captures all displays spanning negative and positive virtual screen coordinates.
   - Seamless PerMonitorV2 DPI awareness prevents blur and coordinate drift.
-- **⭕ "Circle to Search" & Rectangle Selection**
-  - **Rectangle Drag-Select**: Clean border with live pixel dimensions and 4 corner resize handles.
-  - **Pixel-Style Lasso / Circling**: Smooth freehand drawing with a glowing neon trail that calculates the tight bounding box upon release.
-  - Interactive dimming mask cut-out keeps your selected area 100% bright and clear.
+- **⭕ Android "Circle to Search" Experience**
+  - **Auto Screen Scan on Trigger**: Instantly parses and indexes all text across the entire screen in the background (~150-250ms).
+  - **Direct Text Interaction**: All detected words are immediately interactive! Hovering over words displays a soft glow pill and switches to the `IBeam` cursor. Tap any word or drag across phrases to select text directly.
+  - **Image Circling (Visual Search)**: When circling or lassooing an object, photo, or region that is not text, OrbitOCR treats it as an **IMAGE**: captures the region, offers primary **Search with Google Lens**, **Copy Image**, and **Save Image**.
+  - **Glowing Neon Trail**: Freehand circling renders a vibrant Pixel-style cyan/purple glowing trail that calculates the tight bounding box upon release.
+  - Interactive dimming mask cut-out keeps your active selection 100% bright and clear.
   - Press `Esc` at any moment to cancel immediately with zero residual memory footprint.
 - **🔒 100% Local Offline OCR**
   - Powered by native Windows 10/11 `Windows.Media.Ocr.OcrEngine`.
-  - No cloud calls, no telemetry, no external runtimes like Tesseract or Python.
+  - Zero cloud APIs, zero telemetry, zero external runtimes like Tesseract or Python.
   - Automatic language detection based on user profile and system language packs.
-- **💊 Sleek Floating Action Pill Menu**
-  - **📋 Copy Text**: Copies recognized text to clipboard with subtle harmonic audio chime and toast notification.
-  - **🌐 Search Google**: Opens the default browser with the escaped query (`https://www.google.com/search?q=...`).
-  - **📷 Search Lens / Image**: Saves the cropped snippet to temporary PNG, copies image to clipboard, and launches Google Lens.
-  - **💾 Save Image**: Prompts to save the high-resolution snippet as PNG/JPEG.
-  - Gracefully falls back to visual image search when no text is present in the selection.
+- **💊 Context-Aware Floating Action Pill Menu**
+  - **Text Mode (when text is tapped/dragged)**:
+    - **📋 Copy Text**: Copies text to clipboard with subtle harmonic audio chime and toast notification.
+    - **🌐 Search Google**: Opens browser with `https://www.google.com/search?q=...`.
+  - **Image Mode (when an area/object is circled)**:
+    - **📷 Search with Lens**: Copies image to clipboard (for instant `Ctrl + V` in Lens) and launches Google Lens in your default browser.
+    - **📋 Copy Image**: Copies the cropped bitmap directly to the Windows clipboard.
+    - **💾 Save Image**: Saves the cropped snippet to disk as PNG/JPEG.
+    - **📝 Copy Text**: If text was detected inside the circle, also provides a one-click text copy.
 
 ---
 

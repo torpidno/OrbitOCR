@@ -79,7 +79,7 @@ public class SettingsService
 
             if (enable)
             {
-                key.SetValue(StartupRegistryKeyName, $"\"{exePath}\"");
+                key.SetValue(StartupRegistryKeyName, $"\"{exePath}\" --minimized");
             }
             else
             {

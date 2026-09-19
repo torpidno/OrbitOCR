@@ -162,16 +162,12 @@ public class TrayIconService : IDisposable
     {
         var menu = new ContextMenu
         {
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(26, 28, 38)),
-            Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 245)),
-            BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(55, 65, 81)),
-            BorderThickness = new Thickness(1),
-            Padding = new Thickness(4)
+            Style = (Style)Application.Current.FindResource("TrayContextMenu")
         };
 
-        var triggerItem = CreateMenuItem($"⚡  Trigger Snip ({hotkeyDisplay})", () => TriggerSnipRequested?.Invoke(), isBold: true);
-        var settingsItem = CreateMenuItem("⚙  Settings...", () => OpenSettingsRequested?.Invoke());
-        var aboutItem = CreateMenuItem("ℹ  About OrbitOCR", () =>
+        var triggerItem = CreateMenuItem("Trigger snip", () => TriggerSnipRequested?.Invoke(), isBold: true, gesture: hotkeyDisplay);
+        var settingsItem = CreateMenuItem("Settings…", () => OpenSettingsRequested?.Invoke());
+        var aboutItem = CreateMenuItem("About OrbitOCR", () =>
         {
             System.Windows.MessageBox.Show(
                 "OrbitOCR v1.0\n\nHigh-performance, offline screen OCR and visual search utility for Windows 10/11.\nInspired by Google Pixel's Circle to Search.",
@@ -179,27 +175,26 @@ public class TrayIconService : IDisposable
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         });
-        var exitItem = CreateMenuItem("❌  Exit", () => ExitRequested?.Invoke());
+        var exitItem = CreateMenuItem("Exit", () => ExitRequested?.Invoke());
 
         menu.Items.Add(triggerItem);
-        menu.Items.Add(new Separator { Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 50, 65)), Margin = new Thickness(4, 2, 4, 2) });
+        menu.Items.Add(new Separator());
         menu.Items.Add(settingsItem);
         menu.Items.Add(aboutItem);
-        menu.Items.Add(new Separator { Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(45, 50, 65)), Margin = new Thickness(4, 2, 4, 2) });
+        menu.Items.Add(new Separator());
         menu.Items.Add(exitItem);
 
         return menu;
     }
 
-    private MenuItem CreateMenuItem(string header, Action onClick, bool isBold = false)
+    private MenuItem CreateMenuItem(string header, Action onClick, bool isBold = false, string? gesture = null)
     {
         var item = new MenuItem
         {
             Header = header,
-            Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 240, 245)),
-            Padding = new Thickness(10, 6, 12, 6),
+            Style = (Style)Application.Current.FindResource("TrayMenuItem"),
             FontWeight = isBold ? FontWeights.SemiBold : FontWeights.Normal,
-            FontSize = 13
+            InputGestureText = gesture ?? string.Empty
         };
         item.Click += (s, e) => onClick();
         return item;

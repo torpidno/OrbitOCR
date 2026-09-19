@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="clr-namespace:OrbitOCR.UI"
         mc:Ignorable="d"
-        Title="OrbitOCR Circle to Search"
+        Title="OrbitOCR"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -15,121 +15,122 @@
         Cursor="Cross">
 
     <Grid x:Name="RootGrid" ClipToBounds="True">
-        <!-- Layer 1: Frozen Desktop Screenshot -->
+        <!-- Layer 1: Frozen desktop screenshot -->
         <Image x:Name="FrozenScreenImage" Stretch="Fill" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <!-- Layer 2: Dimmed Overlay with Cutout Mask -->
-        <Path x:Name="DimmedMaskPath" Fill="#60000000"/>
+        <!-- Layer 2: Dimmed overlay with cutout mask -->
+        <Path x:Name="DimmedMaskPath" Fill="#66000000"/>
 
-        <!-- Layer 3: Interactive Selection Canvas -->
-        <Canvas x:Name="SelectionCanvas" 
-                Background="Transparent" 
-                HorizontalAlignment="Stretch" 
+        <!-- Layer 3: Interactive selection canvas -->
+        <Canvas x:Name="SelectionCanvas"
+                Background="Transparent"
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
 
-            <!-- Detected Word Chips Canvas (Shows all recognized text like Android Lens) -->
+            <!-- Subtle underlines marking detected words (Android Lens style) -->
             <Canvas x:Name="WordChipsCanvas" IsHitTestVisible="False" Opacity="0.85"/>
 
-            <!-- Hover Word Highlight (Shows user which word is under cursor) -->
+            <!-- Hover word highlight -->
             <Border x:Name="HoverWordBorder"
-                    Background="#3560A5FA"
-                    BorderBrush="#9060A5FA"
+                    Background="#3360CDFF"
+                    BorderBrush="#AA60CDFF"
                     BorderThickness="1"
                     CornerRadius="3"
                     Visibility="Collapsed"
-                    IsHitTestVisible="False">
-                <Border.Effect>
-                    <DropShadowEffect Color="#38BDF8" BlurRadius="6" ShadowDepth="0" Opacity="0.7"/>
-                </Border.Effect>
-            </Border>
+                    IsHitTestVisible="False"/>
 
-            <!-- Active Selected Words Container -->
+            <!-- Active selected words -->
             <Canvas x:Name="SelectedWordsCanvas" IsHitTestVisible="False"/>
 
-            <!-- Freehand Lasso / Circle Drawing Path (Glowing Neon Line) -->
-            <Path x:Name="LassoDrawingPath" 
-                  Stroke="#38BDF8" 
-                  StrokeThickness="3.5" 
-                  StrokeLineJoin="Round" 
-                  StrokeStartLineCap="Round" 
+            <!-- Freehand lasso trail -->
+            <Path x:Name="LassoDrawingPath"
+                  Stroke="{StaticResource AccentBrush}"
+                  StrokeThickness="2.5"
+                  StrokeLineJoin="Round"
+                  StrokeStartLineCap="Round"
                   StrokeEndLineCap="Round"
                   Visibility="Collapsed"
                   IsHitTestVisible="False">
                 <Path.Effect>
-                    <DropShadowEffect Color="#818CF8" BlurRadius="14" ShadowDepth="0" Opacity="0.9"/>
+                    <DropShadowEffect Color="#60CDFF" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
                 </Path.Effect>
             </Path>
 
-            <!-- Image Selection Box Border -->
+            <!-- Image selection box -->
             <Border x:Name="SelectionBorder"
-                    BorderBrush="#818CF8"
-                    BorderThickness="2"
+                    BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1.5"
                     Background="Transparent"
                     CornerRadius="3"
                     Visibility="Collapsed"
-                    IsHitTestVisible="False">
-                <Border.Effect>
-                    <DropShadowEffect Color="#6366F1" BlurRadius="12" ShadowDepth="0" Opacity="0.8"/>
-                </Border.Effect>
+                    IsHitTestVisible="False"/>
+
+            <!-- Corner resize handles: 24px hit target, 12px visual dot -->
+            <Border x:Name="HandleTopLeft" Width="24" Height="24" Background="Transparent" Cursor="SizeNWSE" Visibility="Collapsed">
+                <Border Width="12" Height="12" Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="6"/>
+            </Border>
+            <Border x:Name="HandleTopRight" Width="24" Height="24" Background="Transparent" Cursor="SizeNESW" Visibility="Collapsed">
+                <Border Width="12" Height="12" Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="6"/>
+            </Border>
+            <Border x:Name="HandleBottomLeft" Width="24" Height="24" Background="Transparent" Cursor="SizeNESW" Visibility="Collapsed">
+                <Border Width="12" Height="12" Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="6"/>
+            </Border>
+            <Border x:Name="HandleBottomRight" Width="24" Height="24" Background="Transparent" Cursor="SizeNWSE" Visibility="Collapsed">
+                <Border Width="12" Height="12" Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="6"/>
             </Border>
 
-            <!-- Corner Resize Handles (For fine-tuning circled region) -->
-            <Border x:Name="HandleTopLeft" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
-            <Border x:Name="HandleTopRight" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
-            <Border x:Name="HandleBottomLeft" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNESW"/>
-            <Border x:Name="HandleBottomRight" Width="10" Height="10" Background="White" BorderBrush="#818CF8" BorderThickness="2" CornerRadius="5" Visibility="Collapsed" Cursor="SizeNWSE"/>
-
-            <!-- Image Dimensions Badge -->
+            <!-- Image dimensions badge -->
             <Border x:Name="DimensionsBadge"
-                    Background="#DD0F172A"
-                    BorderBrush="#334155"
+                    Background="{StaticResource SurfaceRaisedBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="6,2"
+                    CornerRadius="5"
+                    Padding="7,2"
                     Visibility="Collapsed"
                     IsHitTestVisible="False">
                 <TextBlock x:Name="DimensionsText"
                            FontSize="11"
                            FontWeight="SemiBold"
-                           Foreground="#C4B5FD"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontFamily="{StaticResource MonoFont}"
                            Text="0 × 0 px"/>
             </Border>
 
-            <!-- Floating Action Pill Menu -->
+            <!-- Floating action menu -->
             <ui:ActionMenu x:Name="FloatingActionMenu" Visibility="Collapsed"/>
         </Canvas>
 
-        <!-- Top Android-style Status & Guide Pill -->
-        <Border HorizontalAlignment="Center" 
-                VerticalAlignment="Top" 
+        <!-- Top status & guide pill -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Top"
                 Margin="0,18,0,0"
-                Background="#EE0F172A"
-                BorderBrush="#334155"
+                Background="{StaticResource SurfaceRaisedBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1"
-                CornerRadius="20"
-                Padding="16,8">
+                CornerRadius="10"
+                Padding="15,8">
             <Border.Effect>
-                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2" Opacity="0.6"/>
+                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2" Opacity="0.55"/>
             </Border.Effect>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Status Icon -->
-                <TextBlock x:Name="TxtStatusIcon" Text="🔍" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TxtStatusMessage"
+                           Text="Scanning screen for text…"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           AutomationProperties.LiveSetting="Polite"/>
 
-                <!-- Main Status Text -->
-                <TextBlock x:Name="TxtStatusMessage" 
-                           Text="Scanning screen for text..." 
-                           Foreground="#F1F5F9" 
-                           FontSize="12" 
-                           FontWeight="SemiBold" 
-                           VerticalAlignment="Center"/>
+                <Rectangle Width="1" Height="13" Fill="{StaticResource BorderBrush}" Margin="13,0" VerticalAlignment="Center"/>
 
-                <Rectangle Width="1" Height="14" Fill="#475569" Margin="14,0,14,0" VerticalAlignment="Center"/>
-
-                <!-- Hint -->
-                <TextBlock Text="Select text directly • Circle any image to search • Esc to exit" 
-                           Foreground="#94A3B8" 
-                           FontSize="11" 
+                <TextBlock Text="Select text • Circle an image • Esc to exit"
+                           Foreground="{StaticResource TextTertiaryBrush}"
+                           FontSize="11"
                            VerticalAlignment="Center"/>
             </StackPanel>
         </Border>

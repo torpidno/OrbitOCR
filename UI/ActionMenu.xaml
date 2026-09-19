@@ -1,130 +1,46 @@
 <UserControl x:Class="OrbitOCR.UI.ActionMenu"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             mc:Ignorable="d" 
-             d:DesignWidth="500" d:DesignHeight="120">
+             mc:Ignorable="d"
+             d:DesignWidth="480" d:DesignHeight="110"
+             FontFamily="{StaticResource UiFont}">
 
     <UserControl.Resources>
-        <!-- Standard Button Style -->
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#2A2E3D"/>
-            <Setter Property="Foreground" Value="#F3F4F6"/>
-            <Setter Property="BorderBrush" Value="#4B5563"/>
-            <Setter Property="BorderThickness" Value="1"/>
+        <!-- Compact variants of the app buttons, sized for a floating menu -->
+        <Style x:Key="PillPrimary" TargetType="Button" BasedOn="{StaticResource AccentButton}">
             <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="16"
-                                Padding="{TemplateBinding Padding}"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3B4254"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#60A5FA"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1E2330"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
-                                <Setter Property="Cursor" Value="Arrow"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Margin" Value="0,0,6,0"/>
         </Style>
 
-        <!-- Primary Blue Accent Button (For Text Copy) -->
-        <Style x:Key="PrimaryBlueButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-            <Setter Property="Background" Value="#2563EB"/>
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="16"
-                                Padding="{TemplateBinding Padding}"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#93C5FD"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1E40AF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <Style x:Key="PillGhost" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
         </Style>
 
-        <!-- Primary Purple/Lens Accent Button (For Image/Lens Search) -->
-        <Style x:Key="PrimaryPurpleButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-            <Setter Property="Background" Value="#7C3AED"/>
-            <Setter Property="BorderBrush" Value="#A78BFA"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="16"
-                                Padding="{TemplateBinding Padding}"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#6D28D9"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#C4B5FD"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#5B21B6"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Icon / Mini Close Button -->
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#9CA3AF"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="12" Padding="6">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="Transparent" BorderThickness="1"
+                                CornerRadius="6" Padding="5">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#374151"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource SurfaceHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -133,91 +49,102 @@
         </Style>
     </UserControl.Resources>
 
-    <!-- Main Floating Container with Pixel Glow Shadow -->
-    <Border Background="#161822"
-            BorderBrush="#384055"
+    <!-- Floating surface: this is one of the few layers allowed a shadow -->
+    <Border Background="{StaticResource SurfaceRaisedBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
             BorderThickness="1"
-            CornerRadius="18"
+            CornerRadius="8"
             Padding="12,10"
-            Margin="6">
+            Margin="8"
+            MaxWidth="520">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="4" Opacity="0.7"/>
+            <DropShadowEffect Color="#000000" BlurRadius="20" ShadowDepth="4" Opacity="0.6"/>
         </Border.Effect>
 
-        <StackPanel Orientation="Vertical" Width="460">
-            <!-- Header: Mode Badge & Preview -->
-            <Grid Margin="0,0,0,8">
+        <StackPanel>
+            <!-- Header: mode badge + preview -->
+            <Grid Margin="0,0,0,9">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border x:Name="BadgeBorder" Background="#22304A" CornerRadius="10" Padding="8,3" Margin="0,0,8,0">
-                        <TextBlock x:Name="StatusBadge" Text="📝 Text Selected" FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
-                    </Border>
-                    <TextBlock x:Name="TextPreview" 
-                               Text="Select any text or circle an image" 
-                               FontSize="12" 
-                               Foreground="#E2E8F0" 
-                               TextTrimming="CharacterEllipsis" 
-                               MaxWidth="320" 
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+                <Border Grid.Column="0" x:Name="BadgeBorder"
+                        Background="{StaticResource AccentSoftBrush}"
+                        CornerRadius="5" Padding="7,3" Margin="0,0,9,0"
+                        VerticalAlignment="Center">
+                    <TextBlock x:Name="StatusBadge" Text="Text" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBrush}"
+                               AutomationProperties.LiveSetting="Polite"/>
+                </Border>
 
-                <!-- Close Button -->
-                <Button Grid.Column="1" x:Name="BtnClose" Style="{StaticResource IconButton}" ToolTip="Close (Esc)" Width="24" Height="24">
-                    <Path Data="M 2,2 L 10,10 M 10,2 L 2,10" Stroke="#9CA3AF" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                <TextBlock Grid.Column="1" x:Name="TextPreview"
+                           Text="Select text or circle an image"
+                           FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="330"
+                           VerticalAlignment="Center"
+                           AutomationProperties.LiveSetting="Polite"/>
+
+                <Button Grid.Column="2" x:Name="BtnClose" Style="{StaticResource IconButton}"
+                        ToolTip="Close (Esc)" Width="24" Height="24"
+                        AutomationProperties.Name="Close">
+                    <Path Data="M 2,2 L 10,10 M 10,2 L 2,10"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Width="12" Height="12" Stretch="Uniform"/>
                 </Button>
             </Grid>
 
-            <!-- Separator Line -->
-            <Rectangle Height="1" Fill="#272D3D" Margin="0,0,0,8"/>
+            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="0,0,0,9"/>
 
-            <!-- Action Buttons Row -->
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <!-- Search Google Lens (Primary for Image Mode) -->
-                <Button x:Name="BtnSearchLens" Style="{StaticResource PrimaryPurpleButtonStyle}" Margin="0,0,6,0" Visibility="Collapsed">
+            <!-- Actions: the contextual primary gets the accent, the rest stay neutral -->
+            <WrapPanel Orientation="Horizontal">
+                <Button x:Name="BtnSearchLens" Style="{StaticResource PillGhost}" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 2,5 L 4,2 L 10,2 L 12,5 L 13,5 A 1,1 0 0 1 14,6 L 14,12 A 1,1 0 0 1 13,13 L 1,13 A 1,1 0 0 1 0,12 L 0,6 A 1,1 0 0 1 1,5 Z M 7,5.5 A 2.5,2.5 0 1 0 7,10.5 A 2.5,2.5 0 1 0 7,5.5"
-                              Stroke="White" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Search with Lens"/>
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search with Lens" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Copy Text (Primary for Text Mode) -->
-                <Button x:Name="BtnCopyText" Style="{StaticResource PrimaryBlueButtonStyle}" Margin="0,0,6,0">
+                <Button x:Name="BtnCopyText" Style="{StaticResource PillPrimary}">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 3,5 A 2,2 0 0 1 5,3 L 11,3 A 2,2 0 0 1 13,5 L 13,11 A 2,2 0 0 1 11,13 L 5,13 A 2,2 0 0 1 3,11 Z M 5,1 L 11,1 A 2,2 0 0 1 13,3"
-                              Stroke="White" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtBtnCopyText" Text="Copy Text"/>
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtBtnCopyText" Text="Copy Text" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Search Google -->
-                <Button x:Name="BtnSearchGoogle" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0">
+                <Button x:Name="BtnSearchGoogle" Style="{StaticResource PillGhost}">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 6.5,2 A 4.5,4.5 0 1 0 11,6.5 M 10,10 L 14,14"
-                              Stroke="#60A5FA" StrokeThickness="1.5" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Search Google"/>
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.5" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search Google" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Copy Image Bitmap -->
-                <Button x:Name="BtnCopyImage" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0" Visibility="Collapsed">
+                <Button x:Name="BtnCopyImage" Style="{StaticResource PillGhost}" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 2,2 L 12,2 L 12,12 L 2,12 Z M 4,8 L 6,6 L 8,9 L 10,5 L 12,8"
-                              Stroke="#38BDF8" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Copy Image"/>
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Copy Image" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Save Image -->
-                <Button x:Name="BtnSaveImage" Style="{StaticResource ActionButtonStyle}" ToolTip="Save image to file" Visibility="Collapsed">
+                <Button x:Name="BtnSaveImage" Style="{StaticResource PillGhost}"
+                        ToolTip="Save image to file" Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal">
                         <Path Data="M 2,2 L 10,2 L 12,4 L 12,12 L 2,12 Z M 4,2 L 4,5 L 10,5 L 10,2 M 4,8 L 10,8 L 10,12 L 4,12"
-                              Stroke="#34D399" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Save Image"/>
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Save Image" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </WrapPanel>

@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace OrbitOCR.UI;
 
@@ -12,11 +11,6 @@ public partial class ActionMenu : UserControl
     public event Action? CopyImageRequested;
     public event Action? SaveImageRequested;
     public event Action? CloseRequested;
-
-    private readonly SolidColorBrush _blueBadgeText = new(Color.FromRgb(96, 165, 250));
-    private readonly SolidColorBrush _blueBadgeBg = new(Color.FromRgb(34, 48, 74));
-    private readonly SolidColorBrush _purpleBadgeText = new(Color.FromRgb(192, 132, 252));
-    private readonly SolidColorBrush _purpleBadgeBg = new(Color.FromRgb(59, 27, 84));
 
     public ActionMenu()
     {
@@ -30,11 +24,20 @@ public partial class ActionMenu : UserControl
         BtnClose.Click += (s, e) => CloseRequested?.Invoke();
     }
 
+    /// <summary>
+    /// Gives the contextual primary action the single accent colour; every other
+    /// action stays a neutral ghost so the menu never shows two competing CTAs.
+    /// </summary>
+    private void SetPrimaryAction(Button primary)
+    {
+        BtnSearchLens.Style = (Style)FindResource("PillGhost");
+        BtnCopyText.Style = (Style)FindResource("PillGhost");
+        primary.Style = (Style)FindResource("PillPrimary");
+    }
+
     public void SetScanning(string message)
     {
-        StatusBadge.Text = "🔍 Scanning...";
-        StatusBadge.Foreground = _blueBadgeText;
-        BadgeBorder.Background = _blueBadgeBg;
+        StatusBadge.Text = "Scanning";
         TextPreview.Text = message;
 
         BtnSearchLens.Visibility = Visibility.Collapsed;
@@ -49,11 +52,10 @@ public partial class ActionMenu : UserControl
     /// </summary>
     public void ShowForTextSelection(string text, int wordCount)
     {
-        StatusBadge.Text = $"📝 Text Selected ({wordCount} word{(wordCount == 1 ? "" : "s")})";
-        StatusBadge.Foreground = _blueBadgeText;
-        BadgeBorder.Background = _blueBadgeBg;
-
+        StatusBadge.Text = $"Text · {wordCount} word{(wordCount == 1 ? "" : "s")}";
         TextPreview.Text = text.Replace("\r\n", " ").Replace("\n", " ");
+
+        SetPrimaryAction(BtnCopyText);
 
         BtnCopyText.Visibility = Visibility.Visible;
         TxtBtnCopyText.Text = "Copy Text";
@@ -70,9 +72,9 @@ public partial class ActionMenu : UserControl
     /// </summary>
     public void ShowForImageSelection(int width, int height, string? detectedTextInside = null)
     {
-        StatusBadge.Text = $"🖼️ Image ({width} × {height} px)";
-        StatusBadge.Foreground = _purpleBadgeText;
-        BadgeBorder.Background = _purpleBadgeBg;
+        StatusBadge.Text = $"Image · {width}×{height}";
+
+        SetPrimaryAction(BtnSearchLens);
 
         // Visual Search (Lens) is primary
         BtnSearchLens.Visibility = Visibility.Visible;
@@ -89,7 +91,7 @@ public partial class ActionMenu : UserControl
         }
         else
         {
-            TextPreview.Text = "Image selected • Search Google Lens or copy image";
+            TextPreview.Text = "Image selected";
             BtnCopyText.Visibility = Visibility.Collapsed;
             BtnSearchGoogle.Visibility = Visibility.Collapsed;
         }

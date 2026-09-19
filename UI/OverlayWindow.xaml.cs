@@ -117,8 +117,7 @@ public partial class OverlayWindow : Window
     {
         try
         {
-            TxtStatusIcon.Text = "🔍";
-            TxtStatusMessage.Text = "Scanning full screen for text...";
+            TxtStatusMessage.Text = "Scanning screen for text…";
 
             _fullScanResult = await _ocrService.RecognizeAsync(_desktopBitmap);
 
@@ -136,31 +135,28 @@ public partial class OverlayWindow : Window
                 w
             )).ToList();
 
-            TxtStatusIcon.Text = "✨";
-            TxtStatusMessage.Text = $"Screen scanned ({_canvasWords.Count} words) • Select text or circle an image";
+            TxtStatusMessage.Text = $"Scanned {_canvasWords.Count} words • Select text or circle an image";
 
-            // Render subtle indicator chips for all detected words (like Android Lens)
+            // Mark every detected word with a subtle underline rather than a box,
+            // so the screen stays readable until the user actually selects something.
             WordChipsCanvas.Children.Clear();
             foreach (var word in _canvasWords)
             {
-                var chip = new Border
+                var underline = new Border
                 {
-                    Background = new SolidColorBrush(Color.FromArgb(24, 96, 165, 250)),
-                    BorderBrush = new SolidColorBrush(Color.FromArgb(60, 96, 165, 250)),
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(3),
-                    Width = Math.Max(4, word.CanvasRect.Width + 2),
-                    Height = Math.Max(4, word.CanvasRect.Height + 2)
+                    Background = new SolidColorBrush(Color.FromArgb(90, 96, 205, 255)),
+                    CornerRadius = new CornerRadius(1),
+                    Height = 2,
+                    Width = Math.Max(4, word.CanvasRect.Width)
                 };
-                Canvas.SetLeft(chip, word.CanvasRect.Left - 1);
-                Canvas.SetTop(chip, word.CanvasRect.Top - 1);
-                WordChipsCanvas.Children.Add(chip);
+                Canvas.SetLeft(underline, word.CanvasRect.Left);
+                Canvas.SetTop(underline, word.CanvasRect.Bottom - 1);
+                WordChipsCanvas.Children.Add(underline);
             }
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[OverlayWindow] Full screen scan error: {ex.Message}");
-            TxtStatusIcon.Text = "⭕";
             TxtStatusMessage.Text = "Circle any area to search with Google Lens";
         }
     }
@@ -401,8 +397,8 @@ public partial class OverlayWindow : Window
         {
             var highlight = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(90, 59, 130, 246)),
-                BorderBrush = new SolidColorBrush(Color.FromArgb(200, 96, 165, 250)),
+                Background = new SolidColorBrush(Color.FromArgb(70, 96, 205, 255)),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(220, 96, 205, 255)),
                 BorderThickness = new Thickness(1.5),
                 CornerRadius = new CornerRadius(3),
                 Width = word.CanvasRect.Width + 4,
@@ -580,8 +576,9 @@ public partial class OverlayWindow : Window
         FloatingActionMenu.Visibility = Visibility.Visible;
         FloatingActionMenu.UpdateLayout();
 
-        double menuW = 480;
-        double menuH = 110;
+        // Measure the real menu rather than guessing a size, so the pill always fits its content
+        double menuW = FloatingActionMenu.ActualWidth > 0 ? FloatingActionMenu.ActualWidth : FloatingActionMenu.DesiredSize.Width;
+        double menuH = FloatingActionMenu.ActualHeight > 0 ? FloatingActionMenu.ActualHeight : FloatingActionMenu.DesiredSize.Height;
 
         double menuX = anchor.Left + (anchor.Width - menuW) / 2.0;
         double menuY = anchor.Bottom + 12;
@@ -662,17 +659,20 @@ public partial class OverlayWindow : Window
 
     private void UpdateHandlesPosition(Rect rect)
     {
-        Canvas.SetLeft(HandleTopLeft, rect.Left - 5);
-        Canvas.SetTop(HandleTopLeft, rect.Top - 5);
+        // Handles are 24x24 hit targets, so offset by half their size to centre the dot on the corner
+        const double half = 12;
 
-        Canvas.SetLeft(HandleTopRight, rect.Right - 5);
-        Canvas.SetTop(HandleTopRight, rect.Top - 5);
+        Canvas.SetLeft(HandleTopLeft, rect.Left - half);
+        Canvas.SetTop(HandleTopLeft, rect.Top - half);
 
-        Canvas.SetLeft(HandleBottomLeft, rect.Left - 5);
-        Canvas.SetTop(HandleBottomLeft, rect.Bottom - 5);
+        Canvas.SetLeft(HandleTopRight, rect.Right - half);
+        Canvas.SetTop(HandleTopRight, rect.Top - half);
 
-        Canvas.SetLeft(HandleBottomRight, rect.Right - 5);
-        Canvas.SetTop(HandleBottomRight, rect.Bottom - 5);
+        Canvas.SetLeft(HandleBottomLeft, rect.Left - half);
+        Canvas.SetTop(HandleBottomLeft, rect.Bottom - half);
+
+        Canvas.SetLeft(HandleBottomRight, rect.Right - half);
+        Canvas.SetTop(HandleBottomRight, rect.Bottom - half);
     }
 
     private void ShowHandles()

@@ -4,333 +4,173 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="OrbitOCR — Settings &amp; Dashboard"
-        Height="680" Width="560"
-        WindowStartupLocation="CenterScreen"
+        Title="OrbitOCR Settings"
+        Width="660"
+        SizeToContent="Height"
         ResizeMode="CanMinimize"
-        Background="#0F111A"
-        Foreground="#F1F5F9"
-        FontFamily="Segoe UI Variable, Segoe UI, sans-serif">
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource UiFont}">
 
-    <Window.Resources>
-        <!-- Card Style -->
-        <Style x:Key="SettingCard" TargetType="Border">
-            <Setter Property="Background" Value="#171A26"/>
-            <Setter Property="BorderBrush" Value="#2A3045"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Padding" Value="18,16"/>
-            <Setter Property="Margin" Value="0,0,0,14"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.35"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Keycap Badge Style -->
-        <Style x:Key="KeyCapBadge" TargetType="Border">
-            <Setter Property="Background" Value="#252A3D"/>
-            <Setter Property="BorderBrush" Value="#4B5578"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="Margin" Value="0,0,6,0"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" BlurRadius="4" ShadowDepth="2" Opacity="0.4"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Preset Button Style -->
-        <Style x:Key="PresetButton" TargetType="Button">
-            <Setter Property="Background" Value="#1E2333"/>
-            <Setter Property="Foreground" Value="#93C5FD"/>
-            <Setter Property="BorderBrush" Value="#333D56"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="0,0,8,8"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2B334D"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#60A5FA"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Primary Button -->
-        <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#2563EB"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="18,10"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="btnBorder" Property="Background" Value="#1D4ED8"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Secondary Button -->
-        <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#22283A"/>
-            <Setter Property="Foreground" Value="#E2E8F0"/>
-            <Setter Property="BorderBrush" Value="#3B4563"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="btnBorder" Property="Background" Value="#2E3752"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Danger Button -->
-        <Style x:Key="DangerButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#F87171"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="btnBorder" Property="Background" Value="#381E24"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- CheckBox Style -->
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#E2E8F0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <!-- ComboBox Style -->
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#252A3D"/>
-            <Setter Property="Foreground" Value="#F1F5F9"/>
-            <Setter Property="BorderBrush" Value="#3B4563"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-    </Window.Resources>
-
-    <Grid Margin="26,20,26,20">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header: App Brand & Status -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- ===== Header ===== -->
+        <StackPanel Grid.Row="0" Margin="{StaticResource PagePadding}">
+            <TextBlock Text="Settings" Style="{StaticResource PageTitle}"
+                       AutomationProperties.HeadingLevel="Level1"/>
+            <TextBlock Text="Global shortcut, behavior and text recognition"
+                       Style="{StaticResource SettingDescription}"/>
+        </StackPanel>
 
-            <StackPanel Grid.Column="0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Glowing App Icon -->
-                    <Border Background="#2563EB" Width="36" Height="36" CornerRadius="18" Margin="0,0,12,0" VerticalAlignment="Center">
-                        <Border.Effect>
-                            <DropShadowEffect Color="#3B82F6" BlurRadius="12" ShadowDepth="0" Opacity="0.8"/>
-                        </Border.Effect>
-                        <Path Data="M 9,18 A 9,9 0 1 1 27,18 A 9,9 0 1 1 9,18 M 18,13 L 18,23 M 13,18 L 23,18" 
-                              Stroke="White" StrokeThickness="2.2" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel>
-                        <TextBlock Text="OrbitOCR" FontSize="22" FontWeight="Bold" Foreground="#F8FAFC"/>
-                        <TextBlock Text="Circle to Search for Windows 10/11" FontSize="12" Foreground="#94A3B8"/>
+        <!-- ===== Body ===== -->
+        <StackPanel Grid.Row="1" Margin="24,4,24,8">
+
+            <!-- Shortcut -->
+            <TextBlock Text="Shortcut" Style="{StaticResource SectionHeader}"
+                       AutomationProperties.HeadingLevel="Level2"/>
+            <Border Style="{StaticResource Card}">
+                <Grid Margin="{StaticResource CardPadding}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="{StaticResource RowPadding}" VerticalAlignment="Center">
+                        <TextBlock Text="Global shortcut" Style="{StaticResource SettingTitle}"/>
+                        <TextBlock Text="Press this anywhere in Windows to capture and search your screen"
+                                   Style="{StaticResource SettingDescription}"/>
                     </StackPanel>
-                </StackPanel>
-            </StackPanel>
 
-            <!-- Test Snip Quick Button -->
-            <Button Grid.Column="1" x:Name="BtnTestSnip" Style="{StaticResource PrimaryButton}" VerticalAlignment="Center" Padding="14,8">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⚡" Margin="0,0,6,0" FontSize="14"/>
-                    <TextBlock Text="Trigger Snip Now" FontWeight="Bold"/>
-                </StackPanel>
-            </Button>
-        </Grid>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="16,0,0,0">
+                        <WrapPanel x:Name="KeycapsContainer" Orientation="Horizontal"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
 
-        <!-- Main Settings Body -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-8,0" Padding="0,0,8,0">
-            <StackPanel Orientation="Vertical">
-
-                <!-- Section 1: Keyboard Shortcut Studio -->
-                <Border Style="{StaticResource SettingCard}">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,12">
-                            <StackPanel>
-                                <TextBlock Text="Global Snip Shortcut" FontWeight="Bold" FontSize="15" Foreground="#F8FAFC"/>
-                                <TextBlock Text="Press this shortcut anywhere in Windows to activate OrbitOCR" FontSize="12" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                        <Button x:Name="BtnRecordShortcut" Style="{StaticResource GhostButton}"
+                                Padding="12,0" MinWidth="0"
+                                AutomationProperties.Name="Record a new shortcut">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="RecordDot" Width="8" Height="8"
+                                         Fill="{StaticResource TextTertiaryBrush}"
+                                         VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                <TextBlock x:Name="TxtRecordButton" Text="Record" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </Grid>
+                        </Button>
 
-                        <!-- Keycap Display & Recorder Box -->
-                        <Border x:Name="RecorderBox"
-                                Background="#121520"
-                                BorderBrush="#3B82F6"
-                                BorderThickness="1.5"
-                                CornerRadius="12"
-                                Padding="16,14"
-                                Margin="0,0,0,14">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Keycaps Presentation -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Current: " Foreground="#94A3B8" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                    <WrapPanel x:Name="KeycapsContainer" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Style="{StaticResource KeyCapBadge}">
-                                            <TextBlock Text="Ctrl" FontWeight="Bold" FontSize="13" Foreground="#93C5FD"/>
-                                        </Border>
-                                        <TextBlock Text="+" Foreground="#64748B" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <Border Style="{StaticResource KeyCapBadge}">
-                                            <TextBlock Text="Shift" FontWeight="Bold" FontSize="13" Foreground="#93C5FD"/>
-                                        </Border>
-                                        <TextBlock Text="+" Foreground="#64748B" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <Border Style="{StaticResource KeyCapBadge}">
-                                            <TextBlock Text="S" FontWeight="Bold" FontSize="13" Foreground="#93C5FD"/>
-                                        </Border>
-                                    </WrapPanel>
-                                </StackPanel>
-
-                                <!-- Record Button -->
-                                <Button Grid.Column="1" x:Name="BtnRecordShortcut" Style="{StaticResource PrimaryButton}" Padding="14,7" FontSize="12">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock x:Name="TxtRecordIcon" Text="🎙️" Margin="0,0,6,0"/>
-                                        <TextBlock x:Name="TxtRecordButton" Text="Record Shortcut"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-                        </Border>
-
-                        <!-- Quick Presets -->
-                        <TextBlock Text="Or choose a popular preset:" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,8"/>
-                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <Button x:Name="PresetCtrlShiftS" Content="Ctrl + Shift + S (Default)" Style="{StaticResource PresetButton}"/>
-                            <Button x:Name="PresetAltS" Content="Alt + S" Style="{StaticResource PresetButton}"/>
-                            <Button x:Name="PresetAltC" Content="Alt + C (Circle)" Style="{StaticResource PresetButton}"/>
-                            <Button x:Name="PresetCtrlAltS" Content="Ctrl + Alt + S" Style="{StaticResource PresetButton}"/>
-                            <Button x:Name="PresetF9" Content="F9" Style="{StaticResource PresetButton}"/>
-                        </WrapPanel>
-
-                        <!-- Manual Modifiers Checkboxes -->
-                        <Expander Header="Advanced: Manual Key Configuration" Foreground="#94A3B8" FontSize="12">
-                            <StackPanel Margin="0,10,0,0">
-                                <WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <CheckBox x:Name="ChkCtrl" Content="Ctrl" Margin="0,0,16,6" IsChecked="True"/>
-                                    <CheckBox x:Name="ChkShift" Content="Shift" Margin="0,0,16,6" IsChecked="True"/>
-                                    <CheckBox x:Name="ChkAlt" Content="Alt" Margin="0,0,16,6"/>
-                                    <CheckBox x:Name="ChkWin" Content="Windows Key" Margin="0,0,16,6"/>
-                                </WrapPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Target Key:" VerticalAlignment="Center" Foreground="#94A3B8" Margin="0,0,12,0" FontSize="13"/>
-                                    <ComboBox Grid.Column="1" x:Name="CmbKey" Height="32"/>
-                                </Grid>
-                            </StackPanel>
-                        </Expander>
+                        <Button x:Name="BtnTestSnip" Style="{StaticResource SubtleButton}"
+                                Padding="10,0" Margin="4,0,0,0"
+                                AutomationProperties.Name="Test shortcut now">
+                            <TextBlock Text="Test"/>
+                        </Button>
                     </StackPanel>
-                </Border>
+                </Grid>
+            </Border>
 
-                <!-- Section 2: Behavior & Automation -->
-                <Border Style="{StaticResource SettingCard}">
-                    <StackPanel>
-                        <TextBlock Text="Behavior &amp; Clipboard" FontWeight="Bold" FontSize="15" Foreground="#F8FAFC" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="ChkAutoCopy" Content="Auto-copy recognized text immediately upon selection" Margin="0,0,0,12"/>
-                        <CheckBox x:Name="ChkPlaySounds" Content="Play subtle harmonic chime sound when copying text or images" Margin="0,0,0,12" IsChecked="True"/>
-                        <CheckBox x:Name="ChkStartWithWindows" Content="Start OrbitOCR automatically in system tray with Windows"/>
+            <!-- Behavior -->
+            <TextBlock Text="Behavior" Style="{StaticResource SectionHeader}" Margin="0,20,0,8"
+                       AutomationProperties.HeadingLevel="Level2"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <Grid Margin="{StaticResource CardPadding}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="{StaticResource RowPadding}">
+                            <TextBlock Text="Auto-copy recognized text" Style="{StaticResource SettingTitle}"/>
+                            <TextBlock Text="Copy to the clipboard as soon as a selection is made"
+                                       Style="{StaticResource SettingDescription}"/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" x:Name="ChkAutoCopy" Style="{StaticResource SwitchToggle}"
+                                  VerticalAlignment="Center" Margin="16,0,0,0"
+                                  AutomationProperties.Name="Auto-copy recognized text"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="16,0"/>
+
+                    <Grid Margin="{StaticResource CardPadding}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="{StaticResource RowPadding}">
+                            <TextBlock Text="Sound feedback" Style="{StaticResource SettingTitle}"/>
+                            <TextBlock Text="Play a soft chime when text or an image is copied"
+                                       Style="{StaticResource SettingDescription}"/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" x:Name="ChkPlaySounds" Style="{StaticResource SwitchToggle}"
+                                  VerticalAlignment="Center" Margin="16,0,0,0"
+                                  AutomationProperties.Name="Sound feedback"/>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="16,0"/>
+
+                    <Grid Margin="{StaticResource CardPadding}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="{StaticResource RowPadding}">
+                            <TextBlock Text="Start with Windows" Style="{StaticResource SettingTitle}"/>
+                            <TextBlock Text="Launch quietly into the system tray at sign-in"
+                                       Style="{StaticResource SettingDescription}"/>
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" x:Name="ChkStartWithWindows" Style="{StaticResource SwitchToggle}"
+                                  VerticalAlignment="Center" Margin="16,0,0,0"
+                                  AutomationProperties.Name="Start with Windows"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Recognition -->
+            <TextBlock Text="Recognition" Style="{StaticResource SectionHeader}" Margin="0,20,0,8"
+                       AutomationProperties.HeadingLevel="Level2"/>
+            <Border Style="{StaticResource Card}">
+                <Grid Margin="{StaticResource CardPadding}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="{StaticResource RowPadding}" VerticalAlignment="Center">
+                        <TextBlock Text="OCR language" Style="{StaticResource SettingTitle}"/>
+                        <TextBlock Text="Text is recognized on this device by the built-in Windows engine"
+                                   Style="{StaticResource SettingDescription}"/>
                     </StackPanel>
-                </Border>
+                    <ComboBox Grid.Column="1" x:Name="CmbOcrLanguage" Style="{StaticResource FieldComboBox}"
+                              Width="260" VerticalAlignment="Center" Margin="16,0,0,0"
+                              AutomationProperties.Name="OCR language"/>
+                </Grid>
+            </Border>
+        </StackPanel>
 
-                <!-- Section 3: Offline OCR Language -->
-                <Border Style="{StaticResource SettingCard}">
-                    <StackPanel>
-                        <TextBlock Text="Offline OCR Language Pack" FontWeight="Bold" FontSize="15" Foreground="#F8FAFC" Margin="0,0,2,0"/>
-                        <TextBlock Text="Powered 100% offline by Windows.Media.Ocr native engine" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,10"/>
-                        <ComboBox x:Name="CmbOcrLanguage" Height="32"/>
-                    </StackPanel>
-                </Border>
+        <!-- ===== Footer ===== -->
+        <Border Grid.Row="2" Padding="{StaticResource FooterPadding}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            </StackPanel>
-        </ScrollViewer>
+                <Button Grid.Column="0" x:Name="BtnExitApp" Content="Exit app"
+                        Style="{StaticResource SubtleButton}" Padding="0,0"
+                        VerticalAlignment="Center"/>
 
-        <!-- Footer Actions -->
-        <Grid Grid.Row="2" Margin="0,14,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+                <Button Grid.Column="2" x:Name="BtnCancel" Content="Cancel"
+                        Style="{StaticResource GhostButton}" Margin="0,0,8,0"
+                        VerticalAlignment="Center"/>
 
-            <!-- Quit Button -->
-            <Button Grid.Column="0" x:Name="BtnExitApp" Content="Exit OrbitOCR" Style="{StaticResource DangerButton}"/>
-
-            <!-- Minimize Button -->
-            <Button Grid.Column="2" x:Name="BtnMinimizeToTray" Content="Minimize to Tray" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0"/>
-
-            <!-- Save Button -->
-            <Button Grid.Column="3" x:Name="BtnSave" Content="Save &amp; Apply Changes" Style="{StaticResource PrimaryButton}"/>
-        </Grid>
+                <Button Grid.Column="3" x:Name="BtnSave" Content="Save"
+                        Style="{StaticResource AccentButton}" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

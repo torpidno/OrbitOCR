@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using OrbitOCR.Models;
 using OrbitOCR.Services;
@@ -10,11 +12,15 @@ namespace OrbitOCR.UI;
 
 public partial class SettingsWindow : Window
 {
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
     private readonly SettingsService _settingsService;
     private readonly OcrService _ocrService;
     private readonly Action _onTriggerSnip;
     private readonly Action _onExit;
 
+    // Pending (unsaved) shortcut, edited by the recorder
     private bool _isRecording;
     private bool _currentCtrl;
     private bool _currentShift;
@@ -35,36 +41,22 @@ public partial class SettingsWindow : Window
         _onTriggerSnip = onTriggerSnip;
         _onExit = onExit;
 
-        PopulateKeys();
         PopulateLanguages();
         LoadCurrentSettings();
         HookEvents();
-        UpdateKeycapsDisplay();
-    }
-
-    private void PopulateKeys()
-    {
-        var keys = new List<string>();
-        for (char c = 'A'; c <= 'Z'; c++) keys.Add(c.ToString());
-        for (int i = 0; i <= 9; i++) keys.Add(i.ToString());
-        for (int i = 1; i <= 12; i++) keys.Add($"F{i}");
-        keys.Add("PrintScreen");
-        keys.Add("Space");
-        keys.Add("Insert");
-        keys.Add("Home");
-
-        CmbKey.ItemsSource = keys;
     }
 
     private void PopulateLanguages()
     {
         var items = new List<string> { "Default (Windows User Profile Languages)" };
-        var available = _ocrService.GetAvailableLanguages();
-        items.AddRange(available);
+        items.AddRange(_ocrService.GetAvailableLanguages());
 
         CmbOcrLanguage.ItemsSource = items;
     }
 
+    /// <summary>
+    /// Populates the window from persisted settings. Also used to discard pending edits.
+    /// </summary>
     private void LoadCurrentSettings()
     {
         var s = _settingsService.Settings;
@@ -74,8 +66,6 @@ public partial class SettingsWindow : Window
         _currentAlt = s.HotkeyAlt;
         _currentWin = s.HotkeyWin;
         _currentKey = s.HotkeyKey;
-
-        SyncManualControls();
 
         if (!string.IsNullOrEmpty(s.PreferredOcrLanguage) && CmbOcrLanguage.Items.Contains(s.PreferredOcrLanguage))
         {
@@ -89,80 +79,28 @@ public partial class SettingsWindow : Window
         ChkAutoCopy.IsChecked = s.AutoCopyOnSnip;
         ChkPlaySounds.IsChecked = s.PlaySounds;
         ChkStartWithWindows.IsChecked = s.StartWithWindows;
-    }
 
-    private void SyncManualControls()
-    {
-        ChkCtrl.IsChecked = _currentCtrl;
-        ChkShift.IsChecked = _currentShift;
-        ChkAlt.IsChecked = _currentAlt;
-        ChkWin.IsChecked = _currentWin;
-
-        if (CmbKey.Items.Contains(_currentKey))
-        {
-            CmbKey.SelectedItem = _currentKey;
-        }
-        else
-        {
-            CmbKey.SelectedItem = "S";
-        }
+        UpdateKeycapsDisplay();
     }
 
     private void HookEvents()
     {
-        // Recorder button
         BtnRecordShortcut.Click += (s, e) => ToggleRecording();
         PreviewKeyDown += OnWindowPreviewKeyDown;
 
-        // Presets
-        PresetCtrlShiftS.Click += (s, e) => ApplyPreset(true, true, false, false, "S");
-        PresetAltS.Click += (s, e) => ApplyPreset(false, false, true, false, "S");
-        PresetAltC.Click += (s, e) => ApplyPreset(false, false, true, false, "C");
-        PresetCtrlAltS.Click += (s, e) => ApplyPreset(true, false, true, false, "S");
-        PresetF9.Click += (s, e) => ApplyPreset(false, false, false, false, "F9");
-
-        // Manual controls
-        ChkCtrl.Checked += (s, e) => OnManualControlChanged();
-        ChkCtrl.Unchecked += (s, e) => OnManualControlChanged();
-        ChkShift.Checked += (s, e) => OnManualControlChanged();
-        ChkShift.Unchecked += (s, e) => OnManualControlChanged();
-        ChkAlt.Checked += (s, e) => OnManualControlChanged();
-        ChkAlt.Unchecked += (s, e) => OnManualControlChanged();
-        ChkWin.Checked += (s, e) => OnManualControlChanged();
-        ChkWin.Unchecked += (s, e) => OnManualControlChanged();
-        CmbKey.SelectionChanged += (s, e) => OnManualControlChanged();
-
-        // Footer buttons
         BtnTestSnip.Click += OnTestSnipClicked;
         BtnSave.Click += OnSaveClicked;
-        BtnMinimizeToTray.Click += (s, e) => Hide();
+        BtnCancel.Click += (s, e) => CancelAndHide();
         BtnExitApp.Click += (s, e) => _onExit();
     }
 
-    private void ApplyPreset(bool ctrl, bool shift, bool alt, bool win, string key)
+    private void CancelAndHide()
     {
-        _currentCtrl = ctrl;
-        _currentShift = shift;
-        _currentAlt = alt;
-        _currentWin = win;
-        _currentKey = key;
-
-        SyncManualControls();
-        UpdateKeycapsDisplay();
+        LoadCurrentSettings();
+        Hide();
     }
 
-    private void OnManualControlChanged()
-    {
-        if (_isRecording) return;
-
-        _currentCtrl = ChkCtrl.IsChecked == true;
-        _currentShift = ChkShift.IsChecked == true;
-        _currentAlt = ChkAlt.IsChecked == true;
-        _currentWin = ChkWin.IsChecked == true;
-        _currentKey = CmbKey.SelectedItem?.ToString() ?? "S";
-
-        UpdateKeycapsDisplay();
-    }
+    #region Shortcut Recorder
 
     private void ToggleRecording()
     {
@@ -179,18 +117,18 @@ public partial class SettingsWindow : Window
     private void StartRecording()
     {
         _isRecording = true;
-        TxtRecordIcon.Text = "🔴";
-        TxtRecordButton.Text = "Listening... Press keys";
-        RecorderBox.BorderBrush = new SolidColorBrush(Color.FromRgb(248, 113, 113));
+        RecordDot.Fill = (Brush)FindResource("DangerBrush");
+        BtnRecordShortcut.Background = (Brush)FindResource("DangerSoftBrush");
+        TxtRecordButton.Text = "Listening…";
         Focus();
     }
 
     private void StopRecording()
     {
         _isRecording = false;
-        TxtRecordIcon.Text = "🎙️";
-        TxtRecordButton.Text = "Record Shortcut";
-        RecorderBox.BorderBrush = new SolidColorBrush(Color.FromRgb(59, 130, 246));
+        RecordDot.Fill = (Brush)FindResource("TextTertiaryBrush");
+        BtnRecordShortcut.Background = (Brush)FindResource("SurfaceRaisedBrush");
+        TxtRecordButton.Text = "Record";
     }
 
     private void OnWindowPreviewKeyDown(object sender, KeyEventArgs e)
@@ -199,13 +137,15 @@ public partial class SettingsWindow : Window
 
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
 
-        // Read active modifiers
-        bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
-        bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
-        bool alt = (Keyboard.Modifiers & ModifierKeys.Alt) != 0;
-        bool win = (Keyboard.Modifiers & ModifierKeys.Windows) != 0;
+        // Escape cancels recording instead of being captured as a shortcut
+        if (key == Key.Escape)
+        {
+            StopRecording();
+            e.Handled = true;
+            return;
+        }
 
-        // Skip pure modifier key presses alone
+        // Skip pure modifier key presses
         if (key is Key.LeftCtrl or Key.RightCtrl or
             Key.LeftShift or Key.RightShift or
             Key.LeftAlt or Key.RightAlt or
@@ -214,7 +154,11 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // Capture actual key
+        bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+        bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
+        bool alt = (Keyboard.Modifiers & ModifierKeys.Alt) != 0;
+        bool win = (Keyboard.Modifiers & ModifierKeys.Windows) != 0;
+
         string keyStr = key.ToString();
         if (keyStr.Length == 2 && keyStr.StartsWith("D") && char.IsDigit(keyStr[1]))
         {
@@ -227,7 +171,6 @@ public partial class SettingsWindow : Window
         _currentWin = win;
         _currentKey = keyStr;
 
-        SyncManualControls();
         UpdateKeycapsDisplay();
         StopRecording();
 
@@ -249,20 +192,21 @@ public partial class SettingsWindow : Window
         {
             var badge = new Border
             {
-                Background = new SolidColorBrush(Color.FromRgb(37, 42, 61)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(75, 85, 120)),
+                Background = (Brush)FindResource("SurfaceRaisedBrush"),
+                BorderBrush = (Brush)FindResource("BorderStrongBrush"),
                 BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(12, 6, 12, 6),
-                Margin = new Thickness(0, 0, 6, 0)
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(9, 4, 9, 4),
+                Margin = new Thickness(0, 0, 5, 0)
             };
 
             var text = new TextBlock
             {
                 Text = parts[i],
-                FontWeight = FontWeights.Bold,
-                FontSize = 13,
-                Foreground = new SolidColorBrush(Color.FromRgb(147, 197, 253))
+                FontFamily = (FontFamily)FindResource("MonoFont"),
+                FontWeight = FontWeights.SemiBold,
+                FontSize = 12,
+                Foreground = (Brush)FindResource("TextPrimaryBrush")
             };
 
             badge.Child = text;
@@ -273,16 +217,17 @@ public partial class SettingsWindow : Window
                 var plus = new TextBlock
                 {
                     Text = "+",
-                    Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139)),
-                    FontSize = 14,
-                    FontWeight = FontWeights.Bold,
+                    Foreground = (Brush)FindResource("TextSecondaryBrush"),
+                    FontSize = 12,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Margin = new Thickness(0, 0, 6, 0)
+                    Margin = new Thickness(0, 0, 5, 0)
                 };
                 KeycapsContainer.Children.Add(plus);
             }
         }
     }
+
+    #endregion
 
     private void OnTestSnipClicked(object sender, RoutedEventArgs e)
     {
@@ -333,10 +278,43 @@ public partial class SettingsWindow : Window
             MessageBoxImage.Information);
     }
 
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        ApplyDarkTitleBar();
+    }
+
+    /// <summary>
+    /// The window is dark, so the OS title bar must match. DWMWA_USE_IMMERSIVE_DARK_MODE
+    /// is 20 on Windows 11 22000+ and 19 on earlier builds; caption/text color are Win11 only.
+    /// </summary>
+    private void ApplyDarkTitleBar()
+    {
+        try
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            int useDark = 1;
+            if (DwmSetWindowAttribute(hwnd, 20, ref useDark, sizeof(int)) != 0)
+            {
+                DwmSetWindowAttribute(hwnd, 19, ref useDark, sizeof(int));
+            }
+
+            int caption = 0x00202020; // #202020 in 0x00BBGGRR
+            int text = 0x00FFFFFF;    // #FFFFFF in 0x00BBGGRR
+            DwmSetWindowAttribute(hwnd, 35, ref caption, sizeof(int));
+            DwmSetWindowAttribute(hwnd, 36, ref text, sizeof(int));
+        }
+        catch
+        {
+            // Title bar theming is cosmetic; ignore on unsupported builds
+        }
+    }
+
     protected override void OnClosing(CancelEventArgs e)
     {
-        // Minimize to tray instead of quitting
+        // Closing hides to tray; discard unsaved edits so Cancel and the X button agree.
         e.Cancel = true;
+        LoadCurrentSettings();
         Hide();
     }
 }

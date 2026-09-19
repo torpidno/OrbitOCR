@@ -45,6 +45,14 @@ public partial class App : Application
 
         InitializeServices();
         TrimWorkingSet();
+
+        bool startMinimized = e.Args.Any(a => a.Equals("--minimized", StringComparison.OrdinalIgnoreCase) ||
+                                              a.Equals("/minimized", StringComparison.OrdinalIgnoreCase));
+
+        if (!startMinimized)
+        {
+            HandleOpenSettings();
+        }
     }
 
     private void InitializeServices()
@@ -122,18 +130,19 @@ public partial class App : Application
 
     private void HandleOpenSettings()
     {
-        if (_settingsWindow != null && _settingsWindow.IsVisible)
+        if (_settingsWindow != null)
         {
+            _settingsWindow.WindowState = WindowState.Normal;
+            _settingsWindow.Show();
             _settingsWindow.Activate();
             return;
         }
 
-        _settingsWindow = new SettingsWindow(_settingsService, _ocrService);
-        _settingsWindow.Closed += (s, e) =>
-        {
-            _settingsWindow = null;
-            TrimWorkingSet();
-        };
+        _settingsWindow = new SettingsWindow(
+            _settingsService,
+            _ocrService,
+            HandleSnipTriggered,
+            HandleExit);
 
         _settingsWindow.Show();
         _settingsWindow.Activate();

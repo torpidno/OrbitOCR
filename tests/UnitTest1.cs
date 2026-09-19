@@ -173,4 +173,32 @@ public class OrbitOcrTests
         Console.WriteLine($"Full HD OCR: '{result.FullText}', WordCount: {result.WordCount}");
         Assert.IsTrue(result.WordCount >= 10, $"Expected >= 10 words, got {result.WordCount}");
     }
+
+    [TestMethod]
+    public void TestLens_PayloadHtml_UsesLensUploadContract()
+    {
+        var png = new byte[] { 1, 2, 3, 4 };
+        string html = LensSearchService.BuildPayloadHtml(png, 1234567890);
+
+        // The contract Lens' own web form uses: multipart POST of encoded_image to /v3/upload.
+        StringAssert.Contains(html, "https://lens.google.com/v3/upload?ep=ccm&s=&st=");
+        StringAssert.Contains(html, "1234567890");
+        StringAssert.Contains(html, "encoded_image");
+        StringAssert.Contains(html, "\"POST\"");
+        StringAssert.Contains(html, "multipart/form-data");
+        StringAssert.Contains(html, Convert.ToBase64String(png));
+    }
+
+    [TestMethod]
+    public void TestLens_EncodePng_ProducesValidPng()
+    {
+        using var bitmap = new Bitmap(4, 3);
+        byte[] png = LensSearchService.EncodePng(bitmap);
+
+        Assert.IsTrue(png.Length > 8, "Expected PNG signature plus image data");
+        CollectionAssert.AreEqual(
+            new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A },
+            png.Take(8).ToArray(),
+            "PNG signature mismatch");
+    }
 }

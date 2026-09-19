@@ -40,7 +40,7 @@ Using Windows' native offline OCR engine (`Windows.Media.Ocr.OcrEngine`), OrbitO
     - **📋 Copy Text**: Copies text to clipboard with subtle harmonic audio chime and toast notification.
     - **🌐 Search Google**: Opens browser with `https://www.google.com/search?q=...`.
   - **Image Mode (when an area/object is circled)**:
-    - **📷 Search with Lens**: Copies image to clipboard (for instant `Ctrl + V` in Lens) and launches Google Lens in your default browser.
+    - **📷 Search with Lens**: Uploads the captured image straight into Google Lens and opens the results in your default browser — no clipboard paste required.
     - **📋 Copy Image**: Copies the cropped bitmap directly to the Windows clipboard.
     - **💾 Save Image**: Saves the cropped snippet to disk as PNG/JPEG.
     - **📝 Copy Text**: If text was detected inside the circle, also provides a one-click text copy.
@@ -133,7 +133,7 @@ The output executable is created at `./publish/OrbitOCR.exe`. You can copy this 
 | **Resize Selection** | Drag corner handles | Adjust selection bounds before extracting |
 | **Copy Detected Text** | `Ctrl + C` or click `Copy Text` | Copies OCR text to clipboard and closes canvas |
 | **Search Google** | Click `Search Google` | Opens Google search for extracted text in default browser |
-| **Search Lens** | Click `Search Lens` | Copies image to clipboard & opens Google Lens |
+| **Search Lens** | Click `Search Lens` | Uploads the image to Google Lens and opens the results in your browser |
 | **Cancel Snip** | `Esc` | Immediately dismisses overlay and reclaims memory |
 | **Open Settings** | Right-click tray icon -> `Settings...` | Change hotkey, default mode, sound, OCR language |
 

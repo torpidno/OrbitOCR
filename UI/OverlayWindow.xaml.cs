@@ -751,32 +751,43 @@ public partial class OverlayWindow : Window
 
         try
         {
-            string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "OrbitOCR");
-            if (!Directory.Exists(tempDir))
-            {
-                Directory.CreateDirectory(tempDir);
-            }
+            // The browser performs the upload and lands on the results page - no clipboard paste.
+            // LensSearchService owns the temp payload's lifetime.
+            LensSearchService.LaunchSearch(_croppedBitmap);
 
-            string tempFile = System.IO.Path.Combine(tempDir, $"snip_{DateTime.Now:yyyyMMdd_HHmmss}.png");
-            _croppedBitmap.Save(tempFile, ImageFormat.Png);
+            _soundService.PlayCopySuccess();
+            _trayIconService?.ShowNotification("OrbitOCR Lens", "Opening Google Lens results…");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OverlayWindow] SearchLens failed: {ex.Message}");
+            CopyImageAndOpenLensHome();
+        }
 
-            var bitmapSource = ScreenCaptureService.ConvertToBitmapSource(_croppedBitmap);
-            Clipboard.SetImage(bitmapSource);
+        CloseAndCleanup();
+    }
 
+    /// <summary>
+    /// Last-resort path when the browser hand-off fails: keep the old clipboard behaviour so
+    /// the user can still paste the image into Lens manually.
+    /// </summary>
+    private void CopyImageAndOpenLensHome()
+    {
+        try
+        {
+            Clipboard.SetImage(ScreenCaptureService.ConvertToBitmapSource(_croppedBitmap!));
             Process.Start(new ProcessStartInfo
             {
                 FileName = "https://lens.google.com/",
                 UseShellExecute = true
             });
-
-            _trayIconService?.ShowNotification("OrbitOCR Lens", "Image copied to clipboard! Press Ctrl+V in Google Lens to search.");
+            _trayIconService?.ShowNotification("OrbitOCR Lens", "Image copied - press Ctrl+V in Google Lens.");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[OverlayWindow] SearchLens failed: {ex.Message}");
+            Debug.WriteLine($"[OverlayWindow] Lens fallback failed: {ex.Message}");
+            _trayIconService?.ShowNotification("OrbitOCR Lens", "Lens search failed.");
         }
-
-        CloseAndCleanup();
     }
 
     private void CopyImageAction()

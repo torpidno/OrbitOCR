@@ -228,7 +228,12 @@ OrbitOCR is a single-process WPF tray application. Services are composed by hand
 ```
 OrbitOCR/
 ├── .github/workflows/build.yml     # CI: restore, build, and test on windows-latest
-├── docs/preview.png                # README screenshot
+├── docs/                           # Landing page (GitHub Pages source) + README screenshot
+│   ├── index.html                  # Static landing page (search + AI discoverable)
+│   ├── llms.txt                    # Fact sheet for AI assistants and crawlers
+│   ├── preview.png                 # README/landing screenshot
+│   ├── sitemap.xml · robots.txt    # Search indexing
+│   └── favicon.ico
 ├── LICENSE                         # MIT License
 ├── app.manifest                    # PerMonitorV2 DPI awareness, Win10/11 compatibility, asInvoker
 ├── OrbitOCR.csproj                 # net8.0-windows target, version 1.0.0, single-file publish spec

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrbitOCR — Free Circle to Search for Windows 10/11</title>
+<meta name="description" content="Free, open-source Windows tool. Press Ctrl+Shift+S to copy text off your screen or circle any image to search with Google Lens. 100% offline OCR, portable .exe, MIT.">
+<link rel="canonical" href="https://torpidno.github.io/OrbitOCR/">
+<meta name="theme-color" content="#1b1b1f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="OrbitOCR — Circle to Search for Windows">
+<meta property="og:description" content="Press Ctrl+Shift+S to copy text off your screen or circle any image to search with Google Lens. 100% offline OCR, portable .exe, MIT.">
+<meta property="og:url" content="https://torpidno.github.io/OrbitOCR/">
+<meta property="og:image" content="https://torpidno.github.io/OrbitOCR/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.ico">
+<style>
+  :root {
+    --bg: #1b1b1f; --surface: #242429; --surface-2: #2b2b31;
+    --text: #eaeaf0; --muted: #a6a6b3; --border: #383840;
+    --accent: #60cdff; --accent-ink: #06202b;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.65 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--accent); }
+  header { padding: 64px 0 32px; text-align: center; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .2px; color: var(--muted); font-size: 15px; }
+  .logo img { width: 28px; height: 28px; border-radius: 7px; }
+  h1 { font-size: clamp(28px, 5vw, 42px); line-height: 1.15; margin: 18px 0 12px; letter-spacing: -.02em; }
+  .sub { color: var(--muted); font-size: clamp(16px, 2.4vw, 19px); margin: 0 auto; max-width: 620px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 8px; }
+  .btn {
+    display: inline-block; padding: 13px 22px; border-radius: 8px; text-decoration: none;
+    font-weight: 600; border: 1px solid transparent; transition: background .15s, border-color .15s;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { background: #7cd8ff; }
+  .btn-ghost { border-color: var(--border); color: var(--text); background: var(--surface); }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .meta { color: var(--muted); font-size: 13.5px; margin-top: 10px; }
+  figure { margin: 32px 0 8px; text-align: center; }
+  figure img { max-width: 420px; width: 100%; border-radius: 12px; border: 1px solid var(--border); }
+  section { padding: 30px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 22px; margin: 0 0 14px; letter-spacing: -.01em; }
+  h3 { font-size: 16px; margin: 20px 0 4px; }
+  p { margin: 10px 0; }
+  ul { padding-left: 20px; margin: 10px 0; }
+  li { margin: 6px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 6px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card strong { display: block; margin-bottom: 4px; }
+  .card span { color: var(--muted); font-size: 14.5px; }
+  code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font: 13.5px/1.5 "Cascadia Mono", Consolas, monospace; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow: auto; }
+  pre code { background: none; border: 0; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; }
+  td:not(:first-child), th:not(:first-child) { text-align: center; }
+  .yes { color: #7ee787; } .no { color: #8b8b96; }
+  footer { padding: 34px 0 60px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13.5px; text-align: center; }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo"><img src="favicon.ico" alt="" width="28" height="28"> OrbitOCR</div>
+    <h1>Circle to Search for Windows — free, offline, open source</h1>
+    <p class="sub">Press <code>Ctrl + Shift + S</code> to freeze and dim the whole desktop, then copy text off the screen or freehand-circle any image to search it with Google Lens. No cloud, no installer.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe">Download OrbitOCR.exe</a>
+      <a class="btn btn-ghost" href="https://github.com/torpidno/OrbitOCR">View on GitHub</a>
+    </div>
+    <p class="meta">Windows 10/11 x64 · v1.0.0 · MIT · no admin rights · no .NET install</p>
+  </header>
+
+  <figure>
+    <img src="preview.png" alt="OrbitOCR Settings window showing the global shortcut recorder, behavior toggles, and OCR language picker" loading="lazy">
+  </figure>
+
+  <section>
+    <h2>What is OrbitOCR?</h2>
+    <p>OrbitOCR is a free, open-source utility for Windows 10 and Windows 11 that brings a Circle&nbsp;to&nbsp;Search–style workflow to the desktop. One hotkey freezes and dims every monitor, so you can grab text or search an image from anything on screen — a paused video, an open menu, a hover tooltip, a PDF viewer, or an app that normally blocks selection.</p>
+    <p>Text recognition runs entirely on the OCR engine already built into Windows (<code>Windows.Media.Ocr</code>). There is no cloud service, no telemetry, no account, and no bundled Tesseract or Python.</p>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <ul>
+      <li><strong>Trigger</strong> — press your global hotkey (default <code>Ctrl + Shift + S</code>). The desktop freezes and dims across all displays.</li>
+      <li><strong>Select text</strong> — detected words get a subtle underline; click one or drag across a phrase to copy it or send it to Google Search.</li>
+      <li><strong>Circle an image</strong> — draw a freehand lasso around any object or region, then search it with Google Lens, copy it, or save it as PNG/JPEG.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><strong>100% offline OCR</strong><span>Uses the OCR engine already in Windows. No cloud, no telemetry, no external runtimes.</span></div>
+      <div class="card"><strong>Circle to Search</strong><span>Freehand-circle any image and hand the crop straight to Google Lens — no clipboard paste.</span></div>
+      <div class="card"><strong>Click-to-copy text</strong><span>Every word found on screen is instantly clickable; drag to select phrases in reading order.</span></div>
+      <div class="card"><strong>Multi-monitor freeze</strong><span>Captures the entire virtual desktop, including negative coordinates, and is DPI-aware.</span></div>
+      <div class="card"><strong>Portable, no install</strong><span>A single signed-out .exe with the runtime bundled. No installer, no admin rights.</span></div>
+      <div class="card"><strong>Lightweight tray app</strong><span>Lives in the notification tray and trims its working set to roughly 30 MB when idle.</span></div>
+    </div>
+    <p>The floating action pill adapts to context: <strong>Copy Text</strong> and <strong>Search Google</strong> for text selections; <strong>Search with Lens</strong>, <strong>Copy Image</strong>, and <strong>Save Image</strong> for circled regions.</p>
+  </section>
+
+  <section>
+    <h2>Works 100% offline — your screen never leaves your PC</h2>
+    <ul>
+      <li>OCR is performed locally by the Windows OCR engine.</li>
+      <li>No analytics, crash reporting, accounts, or auto-updater phoning home.</li>
+      <li>The only two actions that leave your device are the ones you click explicitly: <strong>Search Google</strong> and <strong>Search with Lens</strong>, which simply open your default browser.</li>
+      <li>You can verify this: block the executable in your firewall or watch it in Resource Monitor — idle means idle. The source is MIT-licensed and available to audit or build yourself.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Requirements</h2>
+    <ul>
+      <li>Windows 10 version 2004 (build 19041) or later, or Windows 11 — x64.</li>
+      <li>At least one Windows OCR language pack (English ships with Windows). Additional languages are added in <em>Settings → Time &amp; Language</em>.</li>
+      <li>No .NET runtime required — the download is self-contained.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>How to install</h2>
+    <ol>
+      <li>Download <a href="https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe">OrbitOCR.exe</a> from GitHub Releases.</li>
+      <li>Put it in any folder and run it. The binary is unsigned, so SmartScreen may warn on first launch — choose <strong>More info → Run anyway</strong>.</li>
+      <li>Set your hotkey in Settings and, optionally, enable <strong>Start with Windows</strong>.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>OrbitOCR vs other Windows OCR tools</h2>
+    <table>
+      <thead>
+        <tr><th>Capability</th><th>OrbitOCR</th><th>PowerToys Text Extractor</th><th>Snipping Tool</th><th>ShareX</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Free &amp; open source</td><td class="yes">Yes (MIT)</td><td class="yes">Yes</td><td class="no">Built-in</td><td class="yes">Yes</td></tr>
+        <tr><td>Freezes the whole multi-monitor desktop</td><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td>Click or drag detected text directly</td><td class="yes">Yes</td><td class="no">Region only</td><td class="no">Region only</td><td class="no">Region only</td></tr>
+        <tr><td>Freehand circle → Google Lens</td><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td>Offline OCR</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Portable — no installation</td><td class="yes">Yes</td><td class="no">Needs PowerToys</td><td class="no">Built-in</td><td class="no">Installer</td></tr>
+      </tbody>
+    </table>
+    <p class="meta">Comparison reflects each tool's default desktop behavior at the time of writing. If PowerToys covers your case, use PowerToys.</p>
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <h3>Is there a Circle to Search for Windows?</h3>
+    <p>Windows has no native equivalent. OrbitOCR is a free, open-source Circle&nbsp;to&nbsp;Search–style tool that brings the same freeze-and-select workflow to Windows 10 and 11.</p>
+    <h3>Is OrbitOCR free?</h3>
+    <p>Yes. It is MIT-licensed with no paid tier, account, or upsell.</p>
+    <h3>Does OrbitOCR work offline?</h3>
+    <p>Yes. OCR runs locally through the Windows OCR engine. The app needs no internet connection to recognize text.</p>
+    <h3>Does OrbitOCR send my data anywhere?</h3>
+    <p>Only when you explicitly click <strong>Search Google</strong> or <strong>Search with Lens</strong> — those open your browser with your selection. Nothing else leaves your device, and there is no telemetry.</p>
+    <h3>How do I install it?</h3>
+    <p>Download <code>OrbitOCR.exe</code> from GitHub Releases and run it. There is no installer, no admin requirement, and no separate .NET runtime to install.</p>
+    <h3>What are the requirements?</h3>
+    <p>Windows 10 version 2004 (build 19041) or later, or Windows 11, x64, plus at least one installed Windows OCR language pack.</p>
+    <h3>How is it different from PowerToys Text Extractor?</h3>
+    <p>PowerToys extracts text from a selected region. OrbitOCR freezes the entire multi-monitor desktop first — so you can capture hover tooltips, open menus, or paused video — adds direct click/drag selection of detected words, and supports freehand circle → Google Lens for images.</p>
+    <h3>Does it support multiple monitors?</h3>
+    <p>Yes. It captures and dims the whole virtual desktop and is PerMonitorV2 DPI-aware.</p>
+    <h3>Does it need admin rights?</h3>
+    <p>No. It runs with the standard user token (<code>asInvoker</code>) and stores settings in <code>%APPDATA%\OrbitOCR</code>.</p>
+    <h3>Which OCR languages are supported?</h3>
+    <p>Any Windows OCR language pack installed on your system. By default it follows your Windows user-profile languages.</p>
+  </section>
+
+  <footer>
+    <p><strong>OrbitOCR</strong> is released under the <a href="https://github.com/torpidno/OrbitOCR/blob/main/LICENSE">MIT License</a>.</p>
+    <p>Source and downloads: <a href="https://github.com/torpidno/OrbitOCR">github.com/torpidno/OrbitOCR</a></p>
+    <p>OrbitOCR is an independent project and is not affiliated with or endorsed by Google. "Circle to Search" is a trademark of Google LLC; it is used here only to describe the interaction style.</p>
+  </footer>
+
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "OrbitOCR",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "softwareVersion": "1.0.0",
+  "license": "https://github.com/torpidno/OrbitOCR/blob/main/LICENSE",
+  "url": "https://torpidno.github.io/OrbitOCR/",
+  "downloadUrl": "https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is there a Circle to Search for Windows?", "acceptedAnswer": { "@type": "Answer", "text": "Windows has no native equivalent. OrbitOCR is a free, open-source Circle to Search-style tool that brings the same freeze-and-select workflow to Windows 10 and 11." } },
+    { "@type": "Question", "name": "Is OrbitOCR free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is MIT-licensed with no paid tier, account, or upsell." } },
+    { "@type": "Question", "name": "Does OrbitOCR work offline?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. OCR runs locally through the Windows OCR engine (Windows.Media.Ocr). The app needs no internet connection to recognize text." } },
+    { "@type": "Question", "name": "Does OrbitOCR send my data anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "Only when you explicitly click Search Google or Search with Lens, which open your browser with your selection. Nothing else leaves your device, and there is no telemetry." } },
+    { "@type": "Question", "name": "How do I install OrbitOCR?", "acceptedAnswer": { "@type": "Answer", "text": "Download OrbitOCR.exe from GitHub Releases and run it. There is no installer, no admin requirement, and no separate .NET runtime to install." } },
+    { "@type": "Question", "name": "What are the requirements for OrbitOCR?", "acceptedAnswer": { "@type": "Answer", "text": "Windows 10 version 2004 (build 19041) or later, or Windows 11, x64, plus at least one installed Windows OCR language pack." } },
+    { "@type": "Question", "name": "How is OrbitOCR different from PowerToys Text Extractor?", "acceptedAnswer": { "@type": "Answer", "text": "PowerToys extracts text from a selected region. OrbitOCR freezes the entire multi-monitor desktop first, adds direct click and drag selection of detected words, and supports freehand circle to Google Lens for images." } },
+    { "@type": "Question", "name": "Does OrbitOCR support multiple monitors?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. It captures and dims the whole virtual desktop and is PerMonitorV2 DPI-aware." } },
+    { "@type": "Question", "name": "Does OrbitOCR need admin rights?", "acceptedAnswer": { "@type": "Answer", "text": "No. It runs with the standard user token and stores settings in %APPDATA%\\OrbitOCR." } },
+    { "@type": "Question", "name": "Which OCR languages does OrbitOCR support?", "acceptedAnswer": { "@type": "Answer", "text": "Any Windows OCR language pack installed on your system. By default it follows your Windows user-profile languages." } }
+  ]
+}
+</script>
+</body>
+</html>

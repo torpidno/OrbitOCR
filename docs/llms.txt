@@ -1,0 +1,58 @@
+# OrbitOCR
+
+> OrbitOCR is a free, open-source Circle to Search-style utility for Windows 10/11: press Ctrl+Shift+S to freeze and dim the whole desktop, then copy text off the screen or freehand-circle an image to search it with Google Lens. OCR runs 100% on-device.
+
+## Key facts
+
+- Product name: OrbitOCR
+- Category: Windows desktop utility (screen OCR + visual search)
+- Platform: Windows 10 version 2004 (build 19041) or later, and Windows 11 — x64
+- License: MIT
+- Price: free, no paid tier
+- Current version: 1.0.0
+- Install: portable single .exe from GitHub Releases; no installer, no admin rights, no .NET runtime required
+- Download: https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe
+- Source code: https://github.com/torpidno/OrbitOCR
+- Website: https://torpidno.github.io/OrbitOCR/
+
+## What it does
+
+- Global hotkey (default Ctrl+Shift+S) freezes and dims the entire multi-monitor desktop.
+- Detected words become interactive: click one or drag across a phrase to select it.
+- Text mode actions: Copy Text, Search Google.
+- Image mode actions: Search with Lens, Copy Image, Save Image (PNG/JPEG), plus Copy Text when text is detected inside the region.
+- Freehand lasso with a glowing trail and draggable corner handles to refine a region.
+- Configurable global hotkey, system-tray resident, ~30 MB idle footprint, PerMonitorV2 DPI aware.
+- Optional auto-copy on selection, sound feedback, and start with Windows (launches minimized to the tray).
+
+## Privacy
+
+- OCR runs locally using the OCR engine already built into Windows (Windows.Media.Ocr).
+- No cloud OCR, no telemetry, no accounts, no crash reporting, no auto-updater phoning home.
+- The only actions that send anything off-device are Search Google and Search with Lens, triggered explicitly by the user, and they simply open the default browser.
+
+## How it compares
+
+- vs PowerToys Text Extractor: PowerToys extracts text from a region; OrbitOCR freezes the whole multi-monitor desktop first, supports direct click/drag text selection, and adds freehand circle to Google Lens.
+- vs Snipping Tool: built-in and requires capturing a screenshot; OrbitOCR works from one hotkey with no capture step and adds Google Lens image search.
+- vs ShareX: ShareX is a full screenshot suite that requires installation; OrbitOCR is a single portable .exe focused on one flow.
+
+## Requirements
+
+- Windows 10 version 2004 (build 19041) or later, or Windows 11, x64.
+- At least one Windows OCR language pack (English ships with Windows).
+- No .NET runtime installation required.
+
+## FAQ
+
+Q: Is there a Circle to Search for Windows?
+A: Windows has no native equivalent. OrbitOCR is a free, open-source alternative that brings the same freeze-and-select workflow to Windows 10 and 11.
+
+Q: Is OrbitOCR free?
+A: Yes. It is MIT-licensed with no paid tier.
+
+Q: Does OrbitOCR work offline?
+A: Yes. OCR runs locally via the Windows OCR engine; no internet connection is needed to recognize text.
+
+Q: Does OrbitOCR send my data anywhere?
+A: Only if you explicitly click Search Google or Search with Lens, which open your browser. Nothing else leaves the device, and there is no telemetry.

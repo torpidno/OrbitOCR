@@ -71,6 +71,14 @@ No installer and no admin rights required — OrbitOCR is a portable single exec
 4. Optional: enable **Start with Windows** in Settings to add OrbitOCR to your sign-in.
 5. It now lives in the notification tray. Right-click the tray icon for `Trigger snip`, `Settings…`, `About OrbitOCR`, and `Exit`.
 
+Or install with the Windows Package Manager:
+
+```powershell
+winget install torpidno.OrbitOCR
+```
+
+> The winget manifest is submitted to [`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs/pull/437460) and resolves once that pull request is merged — until then, use the direct download above.
+
 ### Build from source
 
 ```powershell

@@ -11,6 +11,7 @@
 - Price: free, no paid tier
 - Current version: 1.0.0
 - Install: portable single .exe from GitHub Releases; no installer, no admin rights, no .NET runtime required
+- Install via winget (pending review in winget-pkgs): winget install torpidno.OrbitOCR
 - Download: https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe
 - Source code: https://github.com/torpidno/OrbitOCR
 - Website: https://torpidno.github.io/OrbitOCR/
@@ -56,3 +57,6 @@ A: Yes. OCR runs locally via the Windows OCR engine; no internet connection is n
 
 Q: Does OrbitOCR send my data anywhere?
 A: Only if you explicitly click Search Google or Search with Lens, which open your browser. Nothing else leaves the device, and there is no telemetry.
+
+Q: How do I install OrbitOCR?
+A: Download OrbitOCR.exe from GitHub Releases and run it, or install with the Windows Package Manager using "winget install torpidno.OrbitOCR" (the winget manifest is pending review). No installer, admin rights, or separate .NET runtime is required.

@@ -70,11 +70,34 @@ public class OcrService
             };
         }
 
+        // Apply 2x high-quality scaling for cropped snippets to significantly boost character recognition on small fonts
+        bool shouldUpscale = bitmap.Width <= 1500 && bitmap.Height <= 1500;
+        double scaleFactor = shouldUpscale ? 2.0 : 1.0;
+
+        Bitmap bitmapToProcess;
+        if (shouldUpscale)
+        {
+            int upW = bitmap.Width * 2;
+            int upH = bitmap.Height * 2;
+            bitmapToProcess = new Bitmap(upW, upH, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bitmapToProcess))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.DrawImage(bitmap, 0, 0, upW, upH);
+            }
+        }
+        else
+        {
+            bitmapToProcess = bitmap;
+        }
+
         try
         {
             // Convert Bitmap to SoftwareBitmap via InMemoryRandomAccessStream
             using var ms = new MemoryStream();
-            bitmap.Save(ms, ImageFormat.Png);
+            bitmapToProcess.Save(ms, ImageFormat.Png);
             byte[] bytes = ms.ToArray();
 
             using var ras = new global::Windows.Storage.Streams.InMemoryRandomAccessStream();
@@ -106,15 +129,21 @@ public class OcrService
                 foreach (var word in line.Words)
                 {
                     var r = word.BoundingRect;
-                    var wordRect = new System.Windows.Rect(r.X, r.Y, r.Width, r.Height);
+                    // Scale back down if 2x upscale was applied
+                    var wordRect = new System.Windows.Rect(
+                        r.X / scaleFactor,
+                        r.Y / scaleFactor,
+                        r.Width / scaleFactor,
+                        r.Height / scaleFactor);
+
                     var wordBox = new OcrWordBox(word.Text, wordRect);
                     lineWords.Add(wordBox);
                     wordBoxes.Add(wordBox);
 
-                    lineMinX = Math.Min(lineMinX, r.X);
-                    lineMinY = Math.Min(lineMinY, r.Y);
-                    lineMaxX = Math.Max(lineMaxX, r.X + r.Width);
-                    lineMaxY = Math.Max(lineMaxY, r.Y + r.Height);
+                    lineMinX = Math.Min(lineMinX, wordRect.X);
+                    lineMinY = Math.Min(lineMinY, wordRect.Y);
+                    lineMaxX = Math.Max(lineMaxX, wordRect.X + wordRect.Width);
+                    lineMaxY = Math.Max(lineMaxY, wordRect.Y + wordRect.Height);
                 }
 
                 // Reconstruct line text preserving spacing between words
@@ -152,6 +181,13 @@ public class OcrService
                 Lines = new List<string>(),
                 WordCount = 0
             };
+        }
+        finally
+        {
+            if (shouldUpscale)
+            {
+                bitmapToProcess.Dispose();
+            }
         }
     }
 }

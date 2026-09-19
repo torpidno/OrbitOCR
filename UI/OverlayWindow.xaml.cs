@@ -138,6 +138,24 @@ public partial class OverlayWindow : Window
 
             TxtStatusIcon.Text = "✨";
             TxtStatusMessage.Text = $"Screen scanned ({_canvasWords.Count} words) • Select text or circle an image";
+
+            // Render subtle indicator chips for all detected words (like Android Lens)
+            WordChipsCanvas.Children.Clear();
+            foreach (var word in _canvasWords)
+            {
+                var chip = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(24, 96, 165, 250)),
+                    BorderBrush = new SolidColorBrush(Color.FromArgb(60, 96, 165, 250)),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(3),
+                    Width = Math.Max(4, word.CanvasRect.Width + 2),
+                    Height = Math.Max(4, word.CanvasRect.Height + 2)
+                };
+                Canvas.SetLeft(chip, word.CanvasRect.Left - 1);
+                Canvas.SetTop(chip, word.CanvasRect.Top - 1);
+                WordChipsCanvas.Children.Add(chip);
+            }
         }
         catch (Exception ex)
         {
@@ -168,11 +186,11 @@ public partial class OverlayWindow : Window
 
     private CanvasWord? FindWordAtPoint(Point pt)
     {
-        // Give a 3px grace margin around words
+        // Generous 8px horizontal, 6px vertical hit-test margin for effortless text clicking
         return _canvasWords.FirstOrDefault(w =>
         {
             var inflated = w.CanvasRect;
-            inflated.Inflate(3, 3);
+            inflated.Inflate(8, 6);
             return inflated.Contains(pt);
         });
     }
@@ -457,9 +475,9 @@ public partial class OverlayWindow : Window
 
         if (_croppedBitmap == null) return;
 
-        // Check if any recognized text is inside the circled region
+        // Check if any recognized text is inside the circled region using IntersectsWith
         var wordsInside = _canvasWords
-            .Where(w => _circledRect.Contains(w.CanvasRect))
+            .Where(w => _circledRect.IntersectsWith(w.CanvasRect))
             .OrderBy(w => Math.Round(w.CanvasRect.Top / 14.0) * 14.0)
             .ThenBy(w => w.CanvasRect.Left)
             .Select(w => w.Text)
@@ -471,9 +489,30 @@ public partial class OverlayWindow : Window
             _currentSelectedText = textInside;
         }
 
-        // Show menu in IMAGE MODE
+        // Show menu in IMAGE MODE immediately
         FloatingActionMenu.ShowForImageSelection(cropW, cropH, textInside);
         PositionActionMenu(_circledRect);
+
+        // Run dedicated 2x upscaled OCR on the cropped bitmap to extract all text with maximum accuracy
+        _ = RunDedicatedCropOcrAsync(_croppedBitmap, cropW, cropH);
+    }
+
+    private async Task RunDedicatedCropOcrAsync(Bitmap croppedBitmap, int cropW, int cropH)
+    {
+        try
+        {
+            var cropResult = await _ocrService.RecognizeAsync(croppedBitmap);
+            if (cropResult.HasText)
+            {
+                _currentSelectedText = cropResult.FullText;
+                FloatingActionMenu.ShowForImageSelection(cropW, cropH, cropResult.FullText);
+                PositionActionMenu(_circledRect);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OverlayWindow] Crop OCR error: {ex.Message}");
+        }
     }
 
     private void ShowImageSelectionVisuals(Rect rect)
@@ -808,6 +847,7 @@ public partial class OverlayWindow : Window
         _croppedBitmap?.Dispose();
 
         FrozenScreenImage.Source = null;
+        WordChipsCanvas.Children.Clear();
         SelectedWordsCanvas.Children.Clear();
         _canvasWords.Clear();
         _selectedWords.Clear();

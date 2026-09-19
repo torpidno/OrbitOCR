@@ -123,6 +123,7 @@ public class OrbitOcrTests
 
         Assert.IsTrue(bounds.Width > 0, "Virtual screen width must be positive");
         Assert.IsTrue(bounds.Height > 0, "Virtual screen height must be positive");
+        Console.WriteLine($"Screen Virtual Bounds: {bounds.Width} x {bounds.Height}, MaxImageDimension: {Windows.Media.Ocr.OcrEngine.MaxImageDimension}");
     }
 
     [TestMethod]
@@ -147,5 +148,29 @@ public class OrbitOcrTests
         Assert.IsTrue(result.FullText.Contains("ORBIT", StringComparison.OrdinalIgnoreCase) ||
                       result.FullText.Contains("OCR", StringComparison.OrdinalIgnoreCase),
                       $"Expected 'ORBIT' or 'OCR' in '{result.FullText}'");
+    }
+
+    [TestMethod]
+    public async Task TestOcr_SmallTextRecognition()
+    {
+        // Full HD desktop size with various UI text snippets in dark mode
+        using var bmp = new Bitmap(1920, 1080);
+        using (var g = Graphics.FromImage(bmp))
+        {
+            g.Clear(Color.FromArgb(24, 24, 27)); // Dark mode
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            using var font = new Font("Segoe UI", 10, FontStyle.Regular);
+            using var brush = new SolidBrush(Color.FromArgb(220, 220, 225));
+            g.DrawString("File Edit View Git Project Build Debug Format Tools Window Help", font, brush, new PointF(20, 10));
+            g.DrawString("Solution Explorer - Folder View", font, brush, new PointF(1500, 40));
+            g.DrawString("Search (Ctrl+Q)", font, brush, new PointF(800, 10));
+            g.DrawString("The quick brown fox jumps over the lazy dog", font, brush, new PointF(200, 500));
+        }
+
+        var ocr = new OcrService();
+        var result = await ocr.RecognizeAsync(bmp);
+
+        Console.WriteLine($"Full HD OCR: '{result.FullText}', WordCount: {result.WordCount}");
+        Assert.IsTrue(result.WordCount >= 10, $"Expected >= 10 words, got {result.WordCount}");
     }
 }

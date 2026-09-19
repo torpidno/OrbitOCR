@@ -27,6 +27,9 @@
                 HorizontalAlignment="Stretch" 
                 VerticalAlignment="Stretch">
 
+            <!-- Detected Word Chips Canvas (Shows all recognized text like Android Lens) -->
+            <Canvas x:Name="WordChipsCanvas" IsHitTestVisible="False" Opacity="0.85"/>
+
             <!-- Hover Word Highlight (Shows user which word is under cursor) -->
             <Border x:Name="HoverWordBorder"
                     Background="#3560A5FA"

@@ -1,0 +1,187 @@
+<UserControl x:Class="OrbitOCR.UI.ActionMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignWidth="480" d:DesignHeight="120">
+
+    <UserControl.Resources>
+        <!-- Button Style -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2A2E3D"/>
+            <Setter Property="Foreground" Value="#F3F4F6"/>
+            <Setter Property="BorderBrush" Value="#4B5563"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="16"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3B4254"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#60A5FA"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E2330"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Primary Accent Button Style -->
+        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="16"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#93C5FD"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E40AF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Icon / Mini Close Button -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="12" Padding="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#374151"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- Main Floating Container with Glow Shadow -->
+    <Border Background="#181A24"
+            BorderBrush="#3B4254"
+            BorderThickness="1"
+            CornerRadius="18"
+            Padding="12,10"
+            Margin="6">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="24" ShadowDepth="4" Opacity="0.6"/>
+        </Border.Effect>
+
+        <StackPanel Orientation="Vertical" Width="440">
+            <!-- Header: Status / Preview -->
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status & Text Snippet -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border x:Name="BadgeBorder" Background="#22304A" CornerRadius="10" Padding="6,2" Margin="0,0,8,0">
+                        <TextBlock x:Name="StatusBadge" Text="⚡ Recognizing..." FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
+                    </Border>
+                    <TextBlock x:Name="TextPreview" 
+                               Text="Detecting text..." 
+                               FontSize="12" 
+                               Foreground="#D1D5DB" 
+                               TextTrimming="CharacterEllipsis" 
+                               MaxWidth="310" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Close Button -->
+                <Button Grid.Column="1" x:Name="BtnClose" Style="{StaticResource IconButton}" ToolTip="Close (Esc)" Width="24" Height="24">
+                    <Path Data="M 2,2 L 10,10 M 10,2 L 2,10" Stroke="#9CA3AF" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                </Button>
+            </Grid>
+
+            <!-- Separator Line -->
+            <Rectangle Height="1" Fill="#2A2F40" Margin="0,0,0,8"/>
+
+            <!-- Action Buttons Row -->
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <!-- Copy Text -->
+                <Button x:Name="BtnCopyText" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 3,5 A 2,2 0 0 1 5,3 L 11,3 A 2,2 0 0 1 13,5 L 13,11 A 2,2 0 0 1 11,13 L 5,13 A 2,2 0 0 1 3,11 Z M 5,1 L 11,1 A 2,2 0 0 1 13,3"
+                              Stroke="White" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Copy Text"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Search Google -->
+                <Button x:Name="BtnSearchGoogle" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 6.5,2 A 4.5,4.5 0 1 0 11,6.5 M 10,10 L 14,14"
+                              Stroke="#60A5FA" StrokeThickness="1.5" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search Google"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Search Lens / Image -->
+                <Button x:Name="BtnSearchLens" Style="{StaticResource ActionButtonStyle}" Margin="0,0,6,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 2,5 L 4,2 L 10,2 L 12,5 L 13,5 A 1,1 0 0 1 14,6 L 14,12 A 1,1 0 0 1 13,13 L 1,13 A 1,1 0 0 1 0,12 L 0,6 A 1,1 0 0 1 1,5 Z M 7,5.5 A 2.5,2.5 0 1 0 7,10.5 A 2.5,2.5 0 1 0 7,5.5"
+                              Stroke="#A78BFA" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search Lens"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Save Image -->
+                <Button x:Name="BtnSaveImage" Style="{StaticResource ActionButtonStyle}" ToolTip="Save snippet image to disk">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 2,2 L 10,2 L 12,4 L 12,12 L 2,12 Z M 4,2 L 4,5 L 10,5 L 10,2 M 4,8 L 10,8 L 10,12 L 4,12"
+                              Stroke="#34D399" StrokeThickness="1.4" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Save Image"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

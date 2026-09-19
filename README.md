@@ -68,7 +68,7 @@ OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), you
 
 No installer and no admin rights required — OrbitOCR is a portable single executable (`asInvoker` manifest).
 
-1. Download the latest `OrbitOCR.exe` from the [Releases](https://github.com/torpidno/OrbitOCR/releases) page.
+1. Download [OrbitOCR.exe](https://github.com/torpidno/OrbitOCR/releases/latest/download/OrbitOCR.exe) (Windows 10 2004+ / Windows 11, x64) from the [Releases](https://github.com/torpidno/OrbitOCR/releases) page.
 2. Put it in any folder (e.g. `%LOCALAPPDATA%\Programs\OrbitOCR`) and run it. Since the binary is unsigned, Windows SmartScreen may show a warning on first launch — choose **More info → Run anyway**.
 3. On first start the **Settings** window opens. Press **Test** or the global hotkey to try a snip.
 4. Optional: enable **Start with Windows** in Settings to add OrbitOCR to your sign-in.

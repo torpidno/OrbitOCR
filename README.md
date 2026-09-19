@@ -5,7 +5,7 @@
 OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), your desktop freezes across every monitor, and you can click or drag over any text to copy or search it, or draw a freehand circle around any image to search it with Google Lens. Text recognition runs entirely on the built-in Windows OCR engine — no cloud, no telemetry, no Tesseract, no Python.
 
 [![Build](https://github.com/torpidno/OrbitOCR/actions/workflows/build.yml/badge.svg)](https://github.com/torpidno/OrbitOCR/actions/workflows/build.yml)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/torpidno/OrbitOCR/releases)
+[![Version](https://img.shields.io/github/v/release/torpidno/OrbitOCR?style=flat-square&label=version&sort=semver)](https://github.com/torpidno/OrbitOCR/releases)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/torpidno/OrbitOCR/blob/main/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square)](#prerequisites)
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square)](https://dotnet.microsoft.com/download/dotnet/8.0)
@@ -73,8 +73,6 @@ No installer and no admin rights required — OrbitOCR is a portable single exec
 3. On first start the **Settings** window opens. Press **Test** or the global hotkey to try a snip.
 4. Optional: enable **Start with Windows** in Settings to add OrbitOCR to your sign-in.
 5. It now lives in the notification tray. Right-click the tray icon for `Trigger snip`, `Settings…`, `About OrbitOCR`, and `Exit`.
-
-> If no release is published yet, use [Build from source](#build-from-source) — the publish step produces the same single-file executable.
 
 ### Build from source
 

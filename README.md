@@ -12,7 +12,7 @@ OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), you
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](#contributing)
 
 <div align="center">
-  <img src="docs/preview.png" alt="OrbitOCR Settings window: global shortcut recorder, behavior toggles, and OCR language picker" width="720">
+  <img src="docs/preview.png" alt="OrbitOCR Settings window: global shortcut recorder, behavior toggles, and OCR language picker" width="420">
 </div>
 
 ## Table of Contents

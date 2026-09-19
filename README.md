@@ -12,10 +12,7 @@ OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), you
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](#contributing)
 
 <div align="center">
-  <!-- Replace this placeholder with a real screenshot or GIF, e.g.:
-  <img src="docs/preview.png" alt="OrbitOCR overlay: dimmed desktop, freehand circle, floating action pill" width="820">
-  -->
-  <sub><strong>Demo placeholder</strong> — add a screenshot/GIF at <code>docs/preview.png</code> and embed it here.</sub>
+  <img src="docs/preview.png" alt="OrbitOCR Settings window: global shortcut recorder, behavior toggles, and OCR language picker" width="720">
 </div>
 
 ## Table of Contents
@@ -231,6 +228,7 @@ OrbitOCR is a single-process WPF tray application. Services are composed by hand
 ```
 OrbitOCR/
 ├── .github/workflows/build.yml     # CI: restore, build, and test on windows-latest
+├── docs/preview.png                # README screenshot
 ├── LICENSE                         # MIT License
 ├── app.manifest                    # PerMonitorV2 DPI awareness, Win10/11 compatibility, asInvoker
 ├── OrbitOCR.csproj                 # net8.0-windows target, version 1.0.0, single-file publish spec

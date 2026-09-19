@@ -35,17 +35,6 @@ public partial class ActionMenu : UserControl
         primary.Style = (Style)FindResource("PillPrimary");
     }
 
-    public void SetScanning(string message)
-    {
-        StatusBadge.Text = "Scanning";
-        TextPreview.Text = message;
-
-        BtnSearchLens.Visibility = Visibility.Collapsed;
-        BtnCopyText.Visibility = Visibility.Collapsed;
-        BtnSearchGoogle.Visibility = Visibility.Collapsed;
-        BtnCopyImage.Visibility = Visibility.Collapsed;
-        BtnSaveImage.Visibility = Visibility.Collapsed;
-    }
 
     /// <summary>
     /// User clicked or dragged directly over detected text words

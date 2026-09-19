@@ -1,11 +1,5 @@
 namespace OrbitOCR.Models;
 
-public enum SnipSelectionMode
-{
-    Rectangle,
-    Lasso
-}
-
 public class AppSettings
 {
     public bool HotkeyCtrl { get; set; } = true;
@@ -14,7 +8,6 @@ public class AppSettings
     public bool HotkeyWin { get; set; } = false;
     public string HotkeyKey { get; set; } = "S";
 
-    public SnipSelectionMode DefaultSelectionMode { get; set; } = SnipSelectionMode.Rectangle;
     public bool AutoCopyOnSnip { get; set; } = false;
     public bool PlaySounds { get; set; } = true;
     public bool StartWithWindows { get; set; } = false;

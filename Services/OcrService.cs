@@ -9,7 +9,6 @@ namespace OrbitOCR.Services;
 public class OcrService
 {
     private global::Windows.Media.Ocr.OcrEngine? _engine;
-    private string? _currentLanguageTag;
 
     public OcrService()
     {
@@ -18,8 +17,6 @@ public class OcrService
 
     public void InitializeEngine(string? languageTag)
     {
-        _currentLanguageTag = languageTag;
-
         if (!string.IsNullOrEmpty(languageTag))
         {
             try
@@ -62,12 +59,7 @@ public class OcrService
     {
         if (_engine == null)
         {
-            return new OcrExtractedResult
-            {
-                FullText = string.Empty,
-                Lines = new List<string>(),
-                WordCount = 0
-            };
+            return new OcrExtractedResult();
         }
 
         // Apply 2x high-quality scaling for cropped snippets to significantly boost character recognition on small fonts
@@ -114,73 +106,40 @@ public class OcrService
 
             var ocrResult = await _engine.RecognizeAsync(softwareBitmap);
 
-            var lines = new List<string>();
-            var wordBoxes = new List<OcrWordBox>();
-            var lineBoxes = new List<OcrLineBox>();
-            var textBuilder = new StringBuilder();
-            int wordCount = 0;
+            var words = new List<OcrWordBox>();
+            var text = new StringBuilder();
 
             foreach (var line in ocrResult.Lines)
             {
-                var lineWords = new List<OcrWordBox>();
-                double lineMinX = double.MaxValue, lineMinY = double.MaxValue;
-                double lineMaxX = double.MinValue, lineMaxY = double.MinValue;
+                // Reconstruct line text preserving spacing between words
+                var lineText = string.Join(" ", line.Words.Select(w => w.Text)).Trim();
+                if (lineText.Length > 0)
+                {
+                    text.AppendLine(lineText);
+                }
 
                 foreach (var word in line.Words)
                 {
                     var r = word.BoundingRect;
                     // Scale back down if 2x upscale was applied
-                    var wordRect = new System.Windows.Rect(
+                    words.Add(new OcrWordBox(word.Text, new System.Windows.Rect(
                         r.X / scaleFactor,
                         r.Y / scaleFactor,
                         r.Width / scaleFactor,
-                        r.Height / scaleFactor);
-
-                    var wordBox = new OcrWordBox(word.Text, wordRect);
-                    lineWords.Add(wordBox);
-                    wordBoxes.Add(wordBox);
-
-                    lineMinX = Math.Min(lineMinX, wordRect.X);
-                    lineMinY = Math.Min(lineMinY, wordRect.Y);
-                    lineMaxX = Math.Max(lineMaxX, wordRect.X + wordRect.Width);
-                    lineMaxY = Math.Max(lineMaxY, wordRect.Y + wordRect.Height);
+                        r.Height / scaleFactor)));
                 }
-
-                // Reconstruct line text preserving spacing between words
-                var wordsInLine = line.Words.Select(w => w.Text);
-                var formattedLine = string.Join(" ", wordsInLine).Trim();
-                var textToUse = !string.IsNullOrWhiteSpace(formattedLine) ? formattedLine : line.Text;
-
-                var lineRect = lineWords.Count > 0
-                    ? new System.Windows.Rect(lineMinX, lineMinY, Math.Max(1, lineMaxX - lineMinX), Math.Max(1, lineMaxY - lineMinY))
-                    : System.Windows.Rect.Empty;
-
-                lineBoxes.Add(new OcrLineBox(textToUse, lineRect, lineWords));
-                lines.Add(textToUse);
-                textBuilder.AppendLine(textToUse);
-                wordCount += line.Words.Count;
             }
 
             return new OcrExtractedResult
             {
-                FullText = textBuilder.ToString().TrimEnd(),
-                Lines = lines,
-                Words = wordBoxes,
-                LineBoxes = lineBoxes,
-                WordCount = wordCount,
-                TextAngle = ocrResult.TextAngle,
-                LanguageTag = _engine.RecognizerLanguage.LanguageTag
+                FullText = text.ToString().TrimEnd(),
+                Words = words
             };
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[OcrService] RecognizeAsync error: {ex.Message}");
-            return new OcrExtractedResult
-            {
-                FullText = string.Empty,
-                Lines = new List<string>(),
-                WordCount = 0
-            };
+            return new OcrExtractedResult();
         }
         finally
         {

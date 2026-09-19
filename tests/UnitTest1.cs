@@ -66,7 +66,6 @@ public class OrbitOcrTests
         Assert.IsFalse(settings.HotkeyAlt);
         Assert.IsFalse(settings.HotkeyWin);
         Assert.AreEqual("S", settings.HotkeyKey);
-        Assert.AreEqual(SnipSelectionMode.Rectangle, settings.DefaultSelectionMode);
         Assert.IsTrue(settings.PlaySounds);
     }
 
@@ -143,7 +142,7 @@ public class OrbitOcrTests
         var ocr = new OcrService();
         var result = await ocr.RecognizeAsync(bmp);
 
-        Console.WriteLine($"Extracted OCR text: '{result.FullText}', WordCount: {result.WordCount}");
+        Console.WriteLine($"Extracted OCR text: '{result.FullText}', Words: {result.Words.Count}");
         Assert.IsTrue(result.HasText, "OCR should have extracted text from the rendered image");
         Assert.IsTrue(result.FullText.Contains("ORBIT", StringComparison.OrdinalIgnoreCase) ||
                       result.FullText.Contains("OCR", StringComparison.OrdinalIgnoreCase),
@@ -170,8 +169,8 @@ public class OrbitOcrTests
         var ocr = new OcrService();
         var result = await ocr.RecognizeAsync(bmp);
 
-        Console.WriteLine($"Full HD OCR: '{result.FullText}', WordCount: {result.WordCount}");
-        Assert.IsTrue(result.WordCount >= 10, $"Expected >= 10 words, got {result.WordCount}");
+        Console.WriteLine($"Full HD OCR: '{result.FullText}', Words: {result.Words.Count}");
+        Assert.IsTrue(result.Words.Count >= 10, $"Expected >= 10 words, got {result.Words.Count}");
     }
 
     [TestMethod]

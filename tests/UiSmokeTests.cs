@@ -40,7 +40,6 @@ public class UiSmokeTests
                 var menu = new ActionMenu();
                 menu.ShowForTextSelection("hello world", 2);
                 menu.ShowForImageSelection(120, 80, "detected text");
-                menu.SetScanning("working");
                 Measure(menu, 520, 140);
                 Measure((FrameworkElement)new SettingsWindow(settings, ocr, () => { }, () => { }).Content, 640, 720);
 

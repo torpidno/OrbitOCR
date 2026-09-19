@@ -189,7 +189,7 @@ Hotkey validation: a combination must include at least one of `Ctrl`, `Shift`, `
 |---|---|---|
 | **Global shortcut** | `Ctrl + Shift + S` | Click **Record**, press the combination, then **Save**. **Test** fires a snip immediately |
 | **Auto-copy recognized text** | Off | Copies the selection to the clipboard as soon as the mouse is released over text |
-| **Sound feedback** | On | Plays a synthesized 80 ms harmonic chime on copy (no audio assets — the WAV is generated in memory) |
+| **Sound feedback** | On | Plays the Windows notification sound when text or an image is copied |
 | **Start with Windows** | Off | Adds `"OrbitOCR.exe" --minimized` to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, so sign-in boots straight to the tray |
 | **OCR language** | Default (Windows user profile) | Any installed `Windows.Media.Ocr` recognizer language; falls back to the user profile, then to the first available language |
 
@@ -204,7 +204,6 @@ Settings persist as JSON at `%APPDATA%\OrbitOCR\settings.json`. The file is crea
 | `HotkeyAlt` | bool | `false` | Include `Alt` |
 | `HotkeyWin` | bool | `false` | Include `Win` |
 | `HotkeyKey` | string | `"S"` | Key name (`Key` enum name or a single character) |
-| `DefaultSelectionMode` | enum | `"Rectangle"` | Reserved — the current overlay auto-detects text vs. image from the cursor position |
 | `AutoCopyOnSnip` | bool | `false` | Copy text automatically when a text selection ends |
 | `PlaySounds` | bool | `true` | Play the copy chime |
 | `StartWithWindows` | bool | `false` | Register/unregister the `HKCU\...\Run` entry (launches with `--minimized`) |
@@ -248,14 +247,14 @@ OrbitOCR/
 ├── App.xaml / App.xaml.cs          # Composition root: tray lifecycle, single-instance mutex, memory trimming
 ├── Models/
 │   ├── AppSettings.cs              # Hotkey, selection mode, sound/startup flags, OCR language
-│   └── OcrExtractedResult.cs       # Full text, lines, word/line bounding boxes, word count, angle
+│   └── OcrExtractedResult.cs       # OCR result text + word bounding boxes
 ├── Services/
 │   ├── HotkeyService.cs            # RegisterHotKey + hidden HwndSource message pump (MOD_NOREPEAT)
 │   ├── ScreenCaptureService.cs     # Virtual-desktop capture, DIP-aware conversion, clamped cropping
 │   ├── OcrService.cs               # OcrEngine wrapper: language selection, 2× upscale, word boxes
 │   ├── LensSearchService.cs        # Self-submitting Lens payload page, temp lifecycle, cleanup
 │   ├── TrayIconService.cs          # Shell_NotifyIcon, balloons, Fluent dark context menu
-│   ├── SoundService.cs             # In-memory synthesized chime (no audio assets)
+│   ├── SoundService.cs             # Windows notification sound on copy
 │   └── SettingsService.cs          # settings.json load/save + startup registry
 ├── UI/
 │   ├── Theme.xaml                  # Fluent dark design tokens, control templates, switches

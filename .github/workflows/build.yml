@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore OrbitOCR.csproj
+
+      - name: Build
+        run: dotnet build OrbitOCR.csproj -c Release --no-restore
+
+      - name: Install en-US OCR language pack
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          try {
+            Add-WindowsCapability -Online -Name "Language.OCR~~~en-US~0.0.1.0"
+          } catch {
+            Write-Warning "OCR language pack install failed: $_"
+          }
+
+      - name: Test
+        run: dotnet test tests/OrbitOCR.Tests.csproj -c Release

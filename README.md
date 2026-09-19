@@ -1,117 +1,112 @@
-# OrbitOCR 🪐🔍
+# OrbitOCR
 
-> Lightweight, high-performance, open-source offline screen OCR & visual search utility inspired by Google Pixel's **"Circle to Search"** for Windows 10 & 11.
+**Circle-to-Search for Windows — offline screen OCR and visual search in one hotkey.**
 
----
+OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), your desktop freezes across every monitor, and you can click or drag over any text to copy or search it, or draw a freehand circle around any image to search it with Google Lens. Text recognition runs entirely on the built-in Windows OCR engine — no cloud, no telemetry, no Tesseract, no Python.
 
-## Overview
+[![Build](https://github.com/torpidno/OrbitOCR/actions/workflows/build.yml/badge.svg)](https://github.com/torpidno/OrbitOCR/actions/workflows/build.yml)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/torpidno/OrbitOCR/releases)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](https://github.com/torpidno/OrbitOCR/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square)](#prerequisites)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](#contributing)
 
-**OrbitOCR** runs as an ultra-compact background utility in the Windows system tray. With a single global hotkey (`Ctrl + Shift + S` by default), it freezes your desktop across all connected monitors, dims the screen with a subtle translucent tint, and lets you circle or drag-select any text, diagram, or UI element.
+<div align="center">
+  <!-- Replace this placeholder with a real screenshot or GIF, e.g.:
+  <img src="docs/preview.png" alt="OrbitOCR overlay: dimmed desktop, freehand circle, floating action pill" width="820">
+  -->
+  <sub><strong>Demo placeholder</strong> — add a screenshot/GIF at <code>docs/preview.png</code> and embed it here.</sub>
+</div>
 
-Using Windows' native offline OCR engine (`Windows.Media.Ocr.OcrEngine`), OrbitOCR extracts text instantly without internet access or external binaries, and presents a sleek floating action pill menu right next to your selection.
+## Table of Contents
 
----
+- [Key Features](#key-features)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Install for end users](#install-for-end-users)
+  - [Build from source](#build-from-source)
+  - [Run the tests](#run-the-tests)
+  - [Publish a standalone executable](#publish-a-standalone-executable)
+- [Usage Guide](#usage-guide)
+- [Configuration & Shortcuts](#configuration--shortcuts)
+- [Architecture & Tech Stack](#architecture--tech-stack)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
-## ✨ Features
+## Key Features
 
-- **⚡ System Tray & Background Lifecycle**
-  - Stays quietly in the notification tray (<30 MB RAM idle).
-  - Context menu with `Trigger Snip`, `Settings...`, `About OrbitOCR`, and `Exit`.
-  - Single-instance protection using a named session mutex.
-- **⌨️ Global Win32 Hotkey Hook**
-  - Listens globally via native Win32 `RegisterHotKey` API without polling or background loops.
-  - Fully configurable combinations (e.g. `Ctrl + Shift + S`, `Alt + S`, `PrintScreen`).
-- **🖥️ Multi-Monitor Virtual Desktop Capture**
-  - Instantly captures all displays spanning negative and positive virtual screen coordinates.
-  - Seamless PerMonitorV2 DPI awareness prevents blur and coordinate drift.
-- **⭕ Android "Circle to Search" Experience**
-  - **Auto Screen Scan on Trigger**: Instantly parses and indexes all text across the entire screen in the background (~150-250ms).
-  - **Direct Text Interaction**: All detected words are immediately interactive! Hovering over words displays a soft glow pill and switches to the `IBeam` cursor. Tap any word or drag across phrases to select text directly.
-  - **Image Circling (Visual Search)**: When circling or lassooing an object, photo, or region that is not text, OrbitOCR treats it as an **IMAGE**: captures the region, offers primary **Search with Google Lens**, **Copy Image**, and **Save Image**.
-  - **Glowing Neon Trail**: Freehand circling renders a vibrant Pixel-style cyan/purple glowing trail that calculates the tight bounding box upon release.
-  - Interactive dimming mask cut-out keeps your active selection 100% bright and clear.
-  - Press `Esc` at any moment to cancel immediately with zero residual memory footprint.
-- **🔒 100% Local Offline OCR**
-  - Powered by native Windows 10/11 `Windows.Media.Ocr.OcrEngine`.
-  - Zero cloud APIs, zero telemetry, zero external runtimes like Tesseract or Python.
-  - Automatic language detection based on user profile and system language packs.
-- **💊 Context-Aware Floating Action Pill Menu**
-  - **Text Mode (when text is tapped/dragged)**:
-    - **📋 Copy Text**: Copies text to clipboard with subtle harmonic audio chime and toast notification.
-    - **🌐 Search Google**: Opens browser with `https://www.google.com/search?q=...`.
-  - **Image Mode (when an area/object is circled)**:
-    - **📷 Search with Lens**: Uploads the captured image straight into Google Lens and opens the results in your default browser — no clipboard paste required.
-    - **📋 Copy Image**: Copies the cropped bitmap directly to the Windows clipboard.
-    - **💾 Save Image**: Saves the cropped snippet to disk as PNG/JPEG.
-    - **📝 Copy Text**: If text was detected inside the circle, also provides a one-click text copy.
+- **100% offline OCR** — powered by the native Windows 10/11 `Windows.Media.Ocr` engine. Zero cloud APIs, zero telemetry, zero external runtimes. The explicit **Search Google** / **Search with Lens** actions are the only features that send data off-device, and only when you click them.
+- **Circle-to-Search interaction** — inspired by Google Pixel.
+  - **Auto screen scan**: on trigger, the whole virtual desktop is OCR'd in one background pass (typically ~150–250 ms) and every detected word becomes interactive.
+  - **Direct text interaction**: hovering a word shows a soft glow and switches to an `IBeam` cursor; click a word or drag across a phrase to select it in reading order.
+  - **Freehand circling**: draw a lasso around any object, photo, or UI region to enter image mode — with a glowing cyan trail, a live dimensions badge, and draggable corner handles to refine the selection.
+  - **Dimming mask cut-out** keeps your active selection at 100% brightness while the rest of the screen dims.
+- **Context-aware floating action pill**
+  - *Text mode*: **Copy Text** (with a synthesized chime and tray toast) and **Search Google**.
+  - *Image mode*: **Search with Lens** (uploads the crop straight into Google Lens via the browser — no clipboard paste), **Copy Image**, **Save Image** (PNG/JPEG), plus **Copy Text** when text is detected inside the circle.
+- **Multi-monitor virtual desktop capture** — captures all displays, including negative virtual-screen coordinates, and is PerMonitorV2 DPI-aware to prevent blur and coordinate drift.
+- **Global hotkey, no polling** — registered through the Win32 `RegisterHotKey` API and a hidden message pump. Defaults to `Ctrl + Shift + S`; fully remappable from Settings (at least one modifier or an `F1`–`F12` key is required to avoid accidental triggers).
+- **Background-first lifecycle** — single-instance mutex, tray balloon on launch, and aggressive working-set trimming after every snip (idle footprint ~30 MB).
+- **OCR with small-text boost** — crops up to 1500 × 1500 px are rescaled 2× with high-quality bicubic interpolation before recognition, significantly improving accuracy on small UI fonts.
+- **Language-aware** — defaults to your Windows user-profile OCR languages, with a configurable picker over every installed recognizer language pack.
+- **Fluent dark UI** — custom WPF design system (accent `#60CDFF`), DWM immersive dark title bar, and automation names/live regions for screen readers.
 
----
-
-## 🏗️ Architecture & Project Structure
-
-```
-OrbitOCR/
-├── app.manifest                    # PerMonitorV2 DPI awareness & Windows 10/11 compatibility
-├── OrbitOCR.csproj                 # net8.0-windows10.0.19041.0 target & single-file publish spec
-├── App.xaml & App.xaml.cs          # Tray lifecycle, single-instance mutex, memory trimming
-├── Models/
-│   ├── AppSettings.cs              # User settings (hotkey, OCR language, mode, sound)
-│   └── OcrExtractedResult.cs       # Extracted OCR text lines, word counts, angle
-├── Services/
-│   ├── HotkeyService.cs            # Win32 RegisterHotKey & HwndSource message pump hook
-│   ├── ScreenCaptureService.cs     # Virtual desktop multi-monitor capture & GDI+ bitmap crop
-│   ├── OcrService.cs               # Offline native Windows.Media.Ocr.OcrEngine wrapper
-│   ├── TrayIconService.cs          # Win32 Shell_NotifyIcon with Fluent dark context menu
-│   ├── SoundService.cs             # Synthesized harmonic chime audio feedback
-│   └── SettingsService.cs          # Configuration persistence in %APPDATA%\OrbitOCR\settings.json
-├── UI/
-│   ├── ActionMenu.xaml (.cs)       # Floating pill menu (Copy, Search Google, Search Lens, Save)
-│   ├── OverlayWindow.xaml (.cs)    # TopMost virtual screen canvas, mask cutout & lasso drawing
-│   └── SettingsWindow.xaml (.cs)   # Hotkey configurator & OCR language selector
-├── Utils/
-│   └── IconHelper.cs               # Multi-resolution ICO generator (16, 32, 48, 64px)
-├── Assets/
-│   └── app.ico                     # Application icon
-└── tests/
-    ├── OrbitOCR.Tests.csproj       # MSTest test project
-    └── UnitTest1.cs                # Unit & integration tests (bounds, cropping, end-to-end OCR)
-```
-
----
-
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
-- Windows 10 (Build 1903+) or Windows 11 (x64)
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or newer
 
-### 1. Build and Run in Debug Mode
-```bash
-# Clone or navigate to the repository
+| Requirement | Details |
+|---|---|
+| OS | Windows 10 **version 2004 (build 19041)** or later, or Windows 11 — x64 |
+| Runtime (end users) | None. Use the self-contained build; no .NET installation required |
+| Runtime (developers) | [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or newer |
+| OCR language pack | Installed via **Settings → Time & Language → Language & region** for any language you want to recognize (English ships with Windows) |
+| Optional | Visual Studio 2022 17.8+ (workload *.NET desktop development*) or VS Code + C# Dev Kit |
+
+### Install for end users
+
+No installer and no admin rights required — OrbitOCR is a portable single executable (`asInvoker` manifest).
+
+1. Download the latest `OrbitOCR.exe` from the [Releases](https://github.com/torpidno/OrbitOCR/releases) page.
+2. Put it in any folder (e.g. `%LOCALAPPDATA%\Programs\OrbitOCR`) and run it. Since the binary is unsigned, Windows SmartScreen may show a warning on first launch — choose **More info → Run anyway**.
+3. On first start the **Settings** window opens. Press **Test** or the global hotkey to try a snip.
+4. Optional: enable **Start with Windows** in Settings to add OrbitOCR to your sign-in.
+5. It now lives in the notification tray. Right-click the tray icon for `Trigger snip`, `Settings…`, `About OrbitOCR`, and `Exit`.
+
+> If no release is published yet, use [Build from source](#build-from-source) — the publish step produces the same single-file executable.
+
+### Build from source
+
+```powershell
+git clone https://github.com/torpidno/OrbitOCR.git
 cd OrbitOCR
 
-# Build the solution
+# Restore, compile, run (opens the Settings window)
 dotnet build
-
-# Run the utility
 dotnet run
+
+# Or start straight to the tray, skipping the Settings window
+dotnet run -- --minimized
 ```
-Once launched, OrbitOCR will appear in your system notification tray with a welcome notification. Press **`Ctrl + Shift + S`** to trigger your first snip.
 
----
+The app targets `net8.0-windows10.0.19041.0` with WPF enabled, so build and run commands must be executed on Windows.
 
-### 2. Run Automated Unit & OCR Integration Tests
-```bash
+### Run the tests
+
+```powershell
 dotnet test tests/OrbitOCR.Tests.csproj
 ```
-All 9 automated unit and OCR recognition tests will run, testing virtual screen bounds, boundary clamping, serialization, and end-to-end WinRT OCR text extraction.
 
----
+13 automated tests (MSTest) cover bitmap cropping and clamping, settings defaults and hotkey formatting, OCR language discovery, virtual-screen bounds, end-to-end OCR on clear and small dark-mode text, the Lens upload payload contract, PNG encoding, and XAML/resource smoke tests for every view.
 
-### 3. Publish as a Self-Contained Single-File Executable
-To create a standalone `OrbitOCR.exe` with bundled runtime and zero prerequisites:
+> The OCR end-to-end tests require a desktop session with at least one installed Windows OCR language pack.
 
-```bash
+### Publish a standalone executable
+
+Creates a self-contained, compressed, single-file `OrbitOCR.exe` with the .NET runtime bundled:
+
+```powershell
 dotnet publish -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true `
   -p:IncludeNativeLibrariesForSelfExtract=true `
@@ -119,34 +114,208 @@ dotnet publish -c Release -r win-x64 --self-contained true `
   -o ./publish
 ```
 
-The output executable is created at `./publish/OrbitOCR.exe`. You can copy this single `.exe` to any folder, USB drive, or startup directory.
+Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startup directory (`publish/` is git-ignored).
 
----
+## Usage Guide
 
-## 🎯 Usage Guide
+1. **Trigger** — press your global hotkey (default `Ctrl + Shift + S`), left-click the tray icon, or pick `Trigger snip` from the tray menu.
+2. **Wait for the scan** — the desktop freezes, dims, and the top pill reports how many words were detected.
+3. **Interact**:
+   - Click any underlined word, or drag across several, to select text. A pill appears with **Copy Text** and **Search Google**.
+   - Clicking or drawing anywhere that isn't text starts a freehand lasso. Release to capture that region as an image; drag the corner handles to adjust it.
+4. **Act** on the pill (copy, search, save), or press `Esc` to dismiss everything.
 
-| Action | Shortcut / Trigger | Description |
+### Everyday examples
+
+| Goal | Steps |
+|---|---|
+| Copy text from a video, PDF, or app that blocks selection | Hotkey → click/drag the words → **Copy Text** (or `Ctrl + C`) |
+| Look up an error message | Hotkey → drag the message → **Search Google** |
+| Identify a product, landmark, or plant | Hotkey → circle it → **Search with Lens** |
+| Save a region as an image | Hotkey → lasso the region → **Save Image** → choose PNG/JPEG |
+| Reuse a screenshot in a chat | Hotkey → lasso the region → **Copy Image** → paste anywhere |
+| Grab text without clicking the pill | Enable **Auto-copy recognized text** in Settings — the selection is copied the moment you release the mouse |
+
+**Text mode** (words detected under the cursor):
+
+| Action | Description |
+|---|---|
+| Click a word | Selects the single word |
+| Drag across words | Selects the phrase in reading order, preserving spaces |
+| **Copy Text** / `Ctrl + C` | Clipboard + chime + tray toast, then closes the overlay |
+| **Search Google** | Opens `https://www.google.com/search?q=…` in the default browser |
+| **Esc** | Cancels the snip immediately |
+
+**Image mode** (circle or drag a non-text region):
+
+| Action | Description |
+|---|---|
+| **Search with Lens** | Encodes the crop and hands it to Google Lens through your default browser via a self-submitting temp page (deleted after 2 minutes; stale files swept on startup). Falls back to clipboard + lens.google.com if the hand-off fails |
+| **Copy Image** | Puts the cropped bitmap on the clipboard |
+| **Save Image** | Save-as dialog; defaults to `OrbitOCR_yyyyMMdd_HHmmss.png`, PNG or JPEG |
+| **Copy Text** | Appears only when text was detected inside the region; runs OCR on the crop with the 2× upscale boost |
+| Corner handles | Resize the lasso bounding box before acting |
+
+### Tray menu
+
+| Item | Description |
+|---|---|
+| **Trigger snip** | Same as the global hotkey (the configured shortcut is shown as its gesture) |
+| **Settings…** | Shortcut recorder, behavior toggles, and OCR language |
+| **About OrbitOCR** | Version and credits |
+| **Exit** | Fully unregisters the hotkey and removes the tray icon |
+
+> Left-clicking or double-clicking the tray icon also triggers a snip.
+
+## Configuration & Shortcuts
+
+### Keyboard shortcuts
+
+| Shortcut | Context | Action |
 |---|---|---|
-| **Trigger Snip** | `Ctrl + Shift + S` (or tray click) | Freezes virtual desktop, dims background, opens canvas |
-| **Rectangle Mode** | Press `R` or click top pill | Select an exact rectangular area with corner handles |
-| **Circle / Lasso Mode** | Press `C` or click top pill | Draw a freehand circle or curve around target content |
-| **Resize Selection** | Drag corner handles | Adjust selection bounds before extracting |
-| **Copy Detected Text** | `Ctrl + C` or click `Copy Text` | Copies OCR text to clipboard and closes canvas |
-| **Search Google** | Click `Search Google` | Opens Google search for extracted text in default browser |
-| **Search Lens** | Click `Search Lens` | Uploads the image to Google Lens and opens the results in your browser |
-| **Cancel Snip** | `Esc` | Immediately dismisses overlay and reclaims memory |
-| **Open Settings** | Right-click tray icon -> `Settings...` | Change hotkey, default mode, sound, OCR language |
+| `Ctrl + Shift + S` | Global (default, configurable) | Trigger a snip |
+| `Ctrl + C` | Overlay, text selected | Copy the selected text and close the overlay |
+| `Esc` | Overlay / shortcut recorder | Cancel the snip / stop recording |
+| `F1`–`F12` | Global | Function keys are valid hotkeys without any modifier |
 
----
+Hotkey validation: a combination must include at least one of `Ctrl`, `Shift`, `Alt`, `Win`, **or** be a function key (`F1`–`F12`). Assignments that would swallow ordinary typing are rejected when saving.
 
-## ⚡ Performance & Memory Optimization
+### Settings window
 
-OrbitOCR is engineered specifically for background desktop use:
-- **Zero-allocation Idle State**: When the overlay is dismissed, all screenshot bitmaps and WPF visual handles are explicitly disposed.
-- **Aggressive Working Set Trimming**: Upon overlay closure, OrbitOCR triggers garbage collection and calls Win32 `SetProcessWorkingSetSize(proc, -1, -1)`, reducing memory usage to **<30 MB RAM** while idle in the tray.
-- **Asynchronous Pipeline**: Screen capture and OCR execution are decoupled so the UI remains butter-smooth at 60+ FPS.
+| Setting | Default | Description |
+|---|---|---|
+| **Global shortcut** | `Ctrl + Shift + S` | Click **Record**, press the combination, then **Save**. **Test** fires a snip immediately |
+| **Auto-copy recognized text** | Off | Copies the selection to the clipboard as soon as the mouse is released over text |
+| **Sound feedback** | On | Plays a synthesized 80 ms harmonic chime on copy (no audio assets — the WAV is generated in memory) |
+| **Start with Windows** | Off | Adds `"OrbitOCR.exe" --minimized` to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, so sign-in boots straight to the tray |
+| **OCR language** | Default (Windows user profile) | Any installed `Windows.Media.Ocr` recognizer language; falls back to the user profile, then to the first available language |
 
----
+### Settings file
 
-## 📄 License
-MIT License - Open Source and free for personal and commercial use.
+Settings persist as JSON at `%APPDATA%\OrbitOCR\settings.json`. The file is created on first save; a corrupt file silently falls back to defaults.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `HotkeyCtrl` | bool | `true` | Include `Ctrl` in the global hotkey |
+| `HotkeyShift` | bool | `true` | Include `Shift` |
+| `HotkeyAlt` | bool | `false` | Include `Alt` |
+| `HotkeyWin` | bool | `false` | Include `Win` |
+| `HotkeyKey` | string | `"S"` | Key name (`Key` enum name or a single character) |
+| `DefaultSelectionMode` | enum | `"Rectangle"` | Reserved — the current overlay auto-detects text vs. image from the cursor position |
+| `AutoCopyOnSnip` | bool | `false` | Copy text automatically when a text selection ends |
+| `PlaySounds` | bool | `true` | Play the copy chime |
+| `StartWithWindows` | bool | `false` | Register/unregister the `HKCU\...\Run` entry (launches with `--minimized`) |
+| `PreferredOcrLanguage` | string? | `null` | BCP-47 tag (e.g. `"de-DE"`); `null` follows Windows user-profile languages |
+
+### Command-line flags
+
+| Flag | Effect |
+|---|---|
+| `--minimized` / `/minimized` | Start in the tray without opening the Settings window |
+
+## Architecture & Tech Stack
+
+OrbitOCR is a single-process WPF tray application. Services are composed by hand in `App.OnStartup` and communicate through events (`HotkeyTriggered`, `TriggerSnipRequested`, `SettingsChanged`, …), so the UI never talks to Win32 directly and the hotkey, tray, and settings subsystems stay testable and disposable.
+
+| Layer | Technology |
+|---|---|
+| Runtime | .NET 8 (`net8.0-windows10.0.19041.0`), C# 12, nullable reference types, implicit usings |
+| UI | WPF (XAML + code-behind, no MVVM framework), custom Fluent dark design system in `UI/Theme.xaml`, DWM immersive dark title bar |
+| OCR | Windows WinRT `Windows.Media.Ocr.OcrEngine` via `Microsoft.Windows.SDK.NET` projection |
+| Capture | GDI+ `CopyFromScreen` across `SM_*VIRTUALSCREEN` metrics, `System.Drawing.Common` 8.0.8, high-quality bicubic 2× upscale for crops |
+| Interop | Win32 `RegisterHotKey`/`WM_HOTKEY`, `Shell_NotifyIcon`, `SetProcessWorkingSetSize`, `SetWindowPos`, PerMonitorV2 DPI |
+| Persistence | `System.Text.Json` → `%APPDATA%\OrbitOCR\settings.json`; `HKCU\...\Run` for startup |
+| Lens hand-off | Generated temp HTML that multipart-POSTs the PNG to Google Lens' own upload endpoint, opened in the default browser (temp file lifetime 2 min, stale sweep on startup) |
+| Tests | MSTest 3.1.1, Microsoft.NET.Test.Sdk 17.8.0, coverlet.collector 6.0.0 |
+
+### Project structure
+
+```
+OrbitOCR/
+├── .github/workflows/build.yml     # CI: restore, build, and test on windows-latest
+├── LICENSE                         # MIT License
+├── app.manifest                    # PerMonitorV2 DPI awareness, Win10/11 compatibility, asInvoker
+├── OrbitOCR.csproj                 # net8.0-windows target, version 1.0.0, single-file publish spec
+├── App.xaml / App.xaml.cs          # Composition root: tray lifecycle, single-instance mutex, memory trimming
+├── Models/
+│   ├── AppSettings.cs              # Hotkey, selection mode, sound/startup flags, OCR language
+│   └── OcrExtractedResult.cs       # Full text, lines, word/line bounding boxes, word count, angle
+├── Services/
+│   ├── HotkeyService.cs            # RegisterHotKey + hidden HwndSource message pump (MOD_NOREPEAT)
+│   ├── ScreenCaptureService.cs     # Virtual-desktop capture, DIP-aware conversion, clamped cropping
+│   ├── OcrService.cs               # OcrEngine wrapper: language selection, 2× upscale, word boxes
+│   ├── LensSearchService.cs        # Self-submitting Lens payload page, temp lifecycle, cleanup
+│   ├── TrayIconService.cs          # Shell_NotifyIcon, balloons, Fluent dark context menu
+│   ├── SoundService.cs             # In-memory synthesized chime (no audio assets)
+│   └── SettingsService.cs          # settings.json load/save + startup registry
+├── UI/
+│   ├── Theme.xaml                  # Fluent dark design tokens, control templates, switches
+│   ├── ActionMenu.xaml (.cs)       # Floating pill with contextual text/image actions
+│   ├── OverlayWindow.xaml (.cs)    # TopMost frozen-desktop canvas, lasso, mask cutout, word layer
+│   └── SettingsWindow.xaml (.cs)   # Hotkey recorder, toggles, OCR language selector
+├── Utils/
+│   └── IconHelper.cs               # Runtime-generated multi-resolution ICO (16/32/48/64 px)
+├── Assets/
+│   └── app.ico                     # Application icon
+└── tests/
+    ├── OrbitOCR.Tests.csproj       # MSTest project
+    ├── UnitTest1.cs                # Unit + integration tests (cropping, settings, OCR, Lens payload)
+    └── UiSmokeTests.cs             # Parses/lays out every view to catch XAML resource errors
+```
+
+### Design notes
+
+- **No polling anywhere.** The global hotkey arrives as a `WM_HOTKEY` message on a hidden window, and the tray icon as `WM_TRAYICON` callbacks.
+- **Capture → scan are decoupled.** The full-screen OCR runs asynchronously after the overlay is shown, so the UI stays responsive while words stream in.
+- **Memory discipline.** On overlay close, bitmaps and visual canvases are explicitly disposed/cleared, then a full GC plus `SetProcessWorkingSetSize(-1, -1)` trims the working set for an ultra-light tray footprint.
+- **Coordinates are kept in DIP space.** Physical pixel word boxes are scaled to canvas coordinates, and crops are scaled back on capture — keeping selection accurate under DPI scaling and multi-monitor setups.
+
+## Contributing
+
+Contributions are welcome — bug reports, fixes, and features alike.
+
+### Reporting bugs
+
+Open an [issue](https://github.com/torpidno/OrbitOCR/issues) and include:
+
+- Windows version/build and monitor layout (single or multi-monitor, DPI scale);
+- steps to reproduce and what you expected;
+- the OCR language selected and, if relevant, your `%APPDATA%\OrbitOCR\settings.json`;
+- screenshots or a screen recording when the overlay misbehaves.
+
+Check for existing issues first, and keep one issue per problem.
+
+### Pull requests
+
+1. Fork the repository and create a topic branch (`fix/lasso-resize`, `feat/tray-theme`).
+2. Make your change; keep diffs focused and match the existing style (file-scoped namespaces, nullable enabled, services single-purpose).
+3. Build and run the full test suite — CI (`.github/workflows/build.yml`) runs the same restore/build/test flow on Windows for every push and pull request to `main`.
+4. Open a PR describing **what** changed and **why**; link any related issue. This project follows a conventional commit style (`feat:`, `fix:`, `docs:`, `test:`).
+
+### Local development environment
+
+```powershell
+git clone https://github.com/torpidno/OrbitOCR.git
+cd OrbitOCR
+dotnet build                 # compile
+dotnet run                   # launch on the development desktop
+dotnet test tests/OrbitOCR.Tests.csproj
+```
+
+- Windows 10 2004+ / Windows 11 with the .NET 8 SDK is required; WPF projects cannot be built on Linux/macOS.
+- Visual Studio 2022 (workload *.NET desktop development*) or VS Code with the C# Dev Kit both work out of the box — no solution file is needed.
+- The UI smoke tests and OCR integration tests need an interactive desktop session; run them locally, not in a headless agent.
+- New dependencies should be justified — the app project deliberately ships with a single NuGet dependency (`System.Drawing.Common`).
+
+## License
+
+OrbitOCR is released under the **MIT License** — free for personal and commercial use, with attribution. See [`LICENSE`](LICENSE) for the full text.
+
+## Acknowledgments
+
+- **Google Pixel's "Circle to Search"** — the interaction model that inspired this project.
+- **Microsoft Windows OCR** (`Windows.Media.Ocr`) — the on-device recognition engine that makes offline text extraction possible.
+- **Google Lens** — the visual search destination for circled regions.
+- **Microsoft Fluent Design** — the dark design language and accent palette used across the overlay and settings.
+- **MSTest, Microsoft.NET.Test.Sdk, and coverlet** — the testing stack.
+- Everyone who reports bugs, suggests features, and sends pull requests.

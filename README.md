@@ -261,10 +261,9 @@ OrbitOCR/
 │   ├── ActionMenu.xaml (.cs)       # Floating pill with contextual text/image actions
 │   ├── OverlayWindow.xaml (.cs)    # TopMost frozen-desktop canvas, lasso, mask cutout, word layer
 │   └── SettingsWindow.xaml (.cs)   # Hotkey recorder, toggles, OCR language selector
-├── Utils/
-│   └── IconHelper.cs               # Runtime-generated multi-resolution ICO (16/32/48/64 px)
 ├── Assets/
-│   └── app.ico                     # Application icon
+│   ├── app.ico                     # Application (exe) icon
+│   └── tray.ico                    # Tray icon, multi-resolution (16/32/48/64 px)
 └── tests/
     ├── OrbitOCR.Tests.csproj       # MSTest project
     ├── UnitTest1.cs                # Unit + integration tests (cropping, settings, OCR, Lens payload)

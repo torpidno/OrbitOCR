@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\tray.ico" />
   </ItemGroup>
 
   <ItemGroup>

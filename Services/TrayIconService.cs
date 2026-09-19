@@ -1,11 +1,11 @@
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Media;
-using OrbitOCR.Utils;
 
 namespace OrbitOCR.Services;
 
@@ -88,7 +88,7 @@ public class TrayIconService : IDisposable
         _hwnd = _hwndSource.Handle;
         _hwndSource.AddHook(HwndHook);
 
-        _icon = IconHelper.GenerateAppIcon();
+        _icon = LoadAppIcon();
         _contextMenu = BuildContextMenu(hotkeyDisplay);
 
         InitializeTrayIcon();
@@ -198,6 +198,15 @@ public class TrayIconService : IDisposable
         };
         item.Click += (s, e) => onClick();
         return item;
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        using var stream = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/tray.ico"))!.Stream;
+        using var ms = new MemoryStream();
+        stream.CopyTo(ms);
+        ms.Position = 0;
+        return new Icon(ms);
     }
 
     public void Dispose()

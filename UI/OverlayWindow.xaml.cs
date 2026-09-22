@@ -813,31 +813,34 @@ public partial class OverlayWindow : Window
     {
         if (_croppedBitmap == null) return;
 
+        var saveDialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg",
+            FileName = $"OrbitOCR_{DateTime.Now:yyyyMMdd_HHmmss}.png",
+            DefaultExt = ".png"
+        };
+
+        // Cancelling or closing the dialog must leave the snip open with the selection intact.
+        if (saveDialog.ShowDialog() != true) return;
+
         try
         {
-            var saveDialog = new Microsoft.Win32.SaveFileDialog
-            {
-                Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg",
-                FileName = $"OrbitOCR_{DateTime.Now:yyyyMMdd_HHmmss}.png",
-                DefaultExt = ".png"
-            };
+            var format = saveDialog.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                ? ImageFormat.Jpeg
+                : ImageFormat.Png;
 
-            if (saveDialog.ShowDialog() == true)
-            {
-                var format = saveDialog.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
-                    ? ImageFormat.Jpeg
-                    : ImageFormat.Png;
-
-                _croppedBitmap.Save(saveDialog.FileName, format);
-                _soundService.PlayCopySuccess();
-                _trayIconService?.ShowNotification("OrbitOCR", "✓ Image saved successfully!");
-            }
+            // Image.Save writes to disk synchronously; success means the file is fully written.
+            _croppedBitmap.Save(saveDialog.FileName, format);
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[OverlayWindow] SaveImage failed: {ex.Message}");
+            _trayIconService?.ShowNotification("OrbitOCR", "Couldn't save the image — the overlay is still open.");
+            return;
         }
 
+        _soundService.PlayCopySuccess();
+        _trayIconService?.ShowNotification("OrbitOCR", "✓ Image saved successfully!");
         CloseAndCleanup();
     }
 

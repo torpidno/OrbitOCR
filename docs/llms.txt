@@ -22,7 +22,8 @@
 - Detected words become interactive: click one or drag across a phrase to select it.
 - Text mode actions: Copy Text, Search Google.
 - Image mode actions: Search with Lens, Copy Image, Save Image (PNG/JPEG), plus Copy Text when text is detected inside the region.
-- Freehand lasso with a glowing trail and draggable corner handles to refine a region.
+- Rectangular selection by default; hold Alt (or Shift) for a freehand lasso with a glowing trail.
+- Draggable corner handles refine the selected region.
 - Configurable global hotkey, system-tray resident, ~30 MB idle footprint, PerMonitorV2 DPI aware.
 - Optional auto-copy on selection, sound feedback, and start with Windows (launches minimized to the tray).
 

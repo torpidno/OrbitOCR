@@ -40,9 +40,17 @@ public partial class OverlayWindow : Window
     private List<CanvasWord> _canvasWords = new();
     private OcrExtractedResult? _fullScanResult;
 
+    // Drag modes for image/region selection
+    private enum ImageDragMode
+    {
+        None,
+        Rectangle,
+        Lasso
+    }
+
     // Interaction states
     private bool _isTextSelecting;
-    private bool _isCircling;
+    private ImageDragMode _imageDrag;
     private bool _isResizing;
     private string? _activeResizeHandle;
     private Point _startPoint;
@@ -135,7 +143,7 @@ public partial class OverlayWindow : Window
                 w
             )).ToList();
 
-            TxtStatusMessage.Text = $"Scanned {_canvasWords.Count} words • Select text or circle an image";
+            TxtStatusMessage.Text = $"Scanned {_canvasWords.Count} words • Drag to select • Hold Alt to circle";
 
             // Mark every detected word with a subtle underline rather than a box,
             // so the screen stays readable until the user actually selects something.
@@ -157,7 +165,7 @@ public partial class OverlayWindow : Window
         catch (Exception ex)
         {
             Debug.WriteLine($"[OverlayWindow] Full screen scan error: {ex.Message}");
-            TxtStatusMessage.Text = "Circle any area to search with Google Lens";
+            TxtStatusMessage.Text = "Drag to select an area • Hold Alt to circle for Google Lens";
         }
     }
 
@@ -206,7 +214,7 @@ public partial class OverlayWindow : Window
         {
             // === MODE 1: TEXT SELECTION ===
             _isTextSelecting = true;
-            _isCircling = false;
+            _imageDrag = ImageDragMode.None;
             _isResizing = false;
 
             _selectedWords.Clear();
@@ -221,21 +229,33 @@ public partial class OverlayWindow : Window
         }
         else
         {
-            // === MODE 2: IMAGE CIRCLING ===
-            _isCircling = true;
+            // === MODE 2: IMAGE / REGION SELECTION ===
+            // Default drag draws a clean rectangle; holding Alt (or Shift) switches to the freehand lasso.
             _isTextSelecting = false;
             _isResizing = false;
+            bool useLasso = (Keyboard.Modifiers & (ModifierKeys.Alt | ModifierKeys.Shift)) != 0;
+            _imageDrag = useLasso ? ImageDragMode.Lasso : ImageDragMode.Rectangle;
 
             ClearTextSelection();
+            HoverWordBorder.Visibility = Visibility.Collapsed;
 
             _lassoPoints.Clear();
             _lassoPoints.Add(_startPoint);
 
-            _lassoGeometry = new PathGeometry();
-            _lassoFigure = new PathFigure { StartPoint = _startPoint, IsClosed = false };
-            _lassoGeometry.Figures.Add(_lassoFigure);
-            LassoDrawingPath.Data = _lassoGeometry;
-            LassoDrawingPath.Visibility = Visibility.Visible;
+            if (useLasso)
+            {
+                DragRectangle.Visibility = Visibility.Collapsed;
+                _lassoGeometry = new PathGeometry();
+                _lassoFigure = new PathFigure { StartPoint = _startPoint, IsClosed = false };
+                _lassoGeometry.Figures.Add(_lassoFigure);
+                LassoDrawingPath.Data = _lassoGeometry;
+                LassoDrawingPath.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                LassoDrawingPath.Visibility = Visibility.Collapsed;
+                UpdateRectanglePreview(new Rect(_startPoint, _startPoint));
+            }
 
             DimensionsBadge.Visibility = Visibility.Visible;
         }
@@ -288,18 +308,20 @@ public partial class OverlayWindow : Window
             return;
         }
 
-        if (_isCircling)
+        if (_imageDrag == ImageDragMode.Rectangle)
         {
-            // Circling an image / freehand lasso
+            // Standard rectangular marquee
+            UpdateRectanglePreview(NormalizeRect(_startPoint, currentPoint));
+            return;
+        }
+
+        if (_imageDrag == ImageDragMode.Lasso)
+        {
+            // Freehand lasso around an image
             _lassoPoints.Add(currentPoint);
             _lassoFigure?.Segments.Add(new LineSegment(currentPoint, true));
 
-            var minX = _lassoPoints.Min(p => p.X);
-            var minY = _lassoPoints.Min(p => p.Y);
-            var maxX = _lassoPoints.Max(p => p.X);
-            var maxY = _lassoPoints.Max(p => p.Y);
-
-            var previewRect = new Rect(minX, minY, Math.Max(1, maxX - minX), Math.Max(1, maxY - minY));
+            var previewRect = BoundsOf(_lassoPoints);
             UpdateDimmedMask(previewRect);
             UpdateDimensionsBadge(previewRect);
             return;
@@ -353,35 +375,30 @@ public partial class OverlayWindow : Window
             return;
         }
 
-        if (!_isCircling) return;
+        if (_imageDrag == ImageDragMode.None) return;
 
-        _isCircling = false;
+        var dragMode = _imageDrag;
+        _imageDrag = ImageDragMode.None;
         SelectionCanvas.ReleaseMouseCapture();
         LassoDrawingPath.Visibility = Visibility.Collapsed;
+        DragRectangle.Visibility = Visibility.Collapsed;
 
-        if (_lassoPoints.Count > 2)
+        if (dragMode == ImageDragMode.Lasso)
         {
-            double minX = _lassoPoints.Min(p => p.X) - 6;
-            double minY = _lassoPoints.Min(p => p.Y) - 6;
-            double maxX = _lassoPoints.Max(p => p.X) + 6;
-            double maxY = _lassoPoints.Max(p => p.Y) + 6;
-
-            minX = Math.Max(0, minX);
-            minY = Math.Max(0, minY);
-            maxX = Math.Min(SelectionCanvas.ActualWidth, maxX);
-            maxY = Math.Min(SelectionCanvas.ActualHeight, maxY);
-
-            _circledRect = new Rect(minX, minY, Math.Max(20, maxX - minX), Math.Max(20, maxY - minY));
-
-            if (_circledRect.Width < 12 || _circledRect.Height < 12)
+            // Require an actual stroke, not a stray click
+            if (_lassoPoints.Count < 3)
             {
                 HideImageSelectionVisuals();
                 UpdateDimmedMask(Rect.Empty);
                 return;
             }
 
-            ShowImageSelectionVisuals(_circledRect);
-            ProcessCircledImage();
+            var bounds = BoundsOf(_lassoPoints);
+            CompleteImageSelection(new Rect(bounds.X - 6, bounds.Y - 6, bounds.Width + 12, bounds.Height + 12));
+        }
+        else
+        {
+            CompleteImageSelection(NormalizeRect(_startPoint, e.GetPosition(SelectionCanvas)));
         }
     }
 
@@ -511,6 +528,75 @@ public partial class OverlayWindow : Window
         }
     }
 
+    /// <summary>Normalizes a drag into a positive-origin rectangle regardless of drag direction.</summary>
+    internal static Rect NormalizeRect(Point a, Point b)
+    {
+        return new Rect(
+            Math.Min(a.X, b.X),
+            Math.Min(a.Y, b.Y),
+            Math.Abs(a.X - b.X),
+            Math.Abs(a.Y - b.Y));
+    }
+
+    /// <summary>Bounding rectangle of a freehand stroke's points.</summary>
+    private static Rect BoundsOf(List<Point> points)
+    {
+        double minX = points.Min(p => p.X);
+        double minY = points.Min(p => p.Y);
+        double maxX = points.Max(p => p.X);
+        double maxY = points.Max(p => p.Y);
+        return new Rect(minX, minY, Math.Max(1, maxX - minX), Math.Max(1, maxY - minY));
+    }
+
+    /// <summary>Live feedback for a rectangle drag: dashed marquee, dim cut-out and size badge.</summary>
+    private void UpdateRectanglePreview(Rect rect)
+    {
+        if (rect.Width <= 0 || rect.Height <= 0)
+        {
+            DragRectangle.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        Canvas.SetLeft(DragRectangle, rect.X);
+        Canvas.SetTop(DragRectangle, rect.Y);
+        DragRectangle.Width = rect.Width;
+        DragRectangle.Height = rect.Height;
+        DragRectangle.Visibility = Visibility.Visible;
+
+        UpdateDimmedMask(rect);
+        UpdateDimensionsBadge(rect);
+    }
+
+    /// <summary>
+    /// Finalizes an image/region selection: normalizes bounds, clamps them to the canvas,
+    /// then shows the action pill exactly like the existing image flow.
+    /// </summary>
+    private void CompleteImageSelection(Rect rect)
+    {
+        if (rect.Width < 12 || rect.Height < 12)
+        {
+            HideImageSelectionVisuals();
+            UpdateDimmedMask(Rect.Empty);
+            return;
+        }
+
+        double left = Math.Max(0, rect.Left);
+        double top = Math.Max(0, rect.Top);
+        double right = Math.Min(SelectionCanvas.ActualWidth, rect.Right);
+        double bottom = Math.Min(SelectionCanvas.ActualHeight, rect.Bottom);
+
+        if (right - left < 12 || bottom - top < 12)
+        {
+            HideImageSelectionVisuals();
+            UpdateDimmedMask(Rect.Empty);
+            return;
+        }
+
+        _circledRect = new Rect(left, top, right - left, bottom - top);
+        ShowImageSelectionVisuals(_circledRect);
+        ProcessCircledImage();
+    }
+
     private void ShowImageSelectionVisuals(Rect rect)
     {
         Canvas.SetLeft(SelectionBorder, rect.X);
@@ -528,6 +614,7 @@ public partial class OverlayWindow : Window
     private void HideImageSelectionVisuals()
     {
         SelectionBorder.Visibility = Visibility.Collapsed;
+        DragRectangle.Visibility = Visibility.Collapsed;
         DimensionsBadge.Visibility = Visibility.Collapsed;
         HideHandles();
     }
@@ -618,7 +705,7 @@ public partial class OverlayWindow : Window
     {
         if (e.ChangedButton != MouseButton.Left) return;
         _isResizing = true;
-        _isCircling = false;
+        _imageDrag = ImageDragMode.None;
         _isTextSelecting = false;
         _activeResizeHandle = handleName;
         FloatingActionMenu.Visibility = Visibility.Collapsed;

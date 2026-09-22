@@ -37,7 +37,7 @@ OrbitOCR lives in your system tray. Press `Ctrl + Shift + S` (configurable), you
 - **Circle-to-Search interaction** — inspired by Google Pixel.
   - **Auto screen scan**: on trigger, the whole virtual desktop is OCR'd in one background pass (typically ~150–250 ms) and every detected word becomes interactive.
   - **Direct text interaction**: hovering a word shows a soft glow and switches to an `IBeam` cursor; click a word or drag across a phrase to select it in reading order.
-  - **Freehand circling**: draw a lasso around any object, photo, or UI region to enter image mode — with a glowing cyan trail, a live dimensions badge, and draggable corner handles to refine the selection.
+  - **Region selection**: drag a rectangle around any object, photo, or UI region to enter image mode, or hold `Alt` (or `Shift`) for a freehand lasso with a glowing cyan trail. Both show a live dimensions badge and draggable corner handles to refine the selection.
   - **Dimming mask cut-out** keeps your active selection at 100% brightness while the rest of the screen dims.
 - **Context-aware floating action pill**
   - *Text mode*: **Copy Text** (with a synthesized chime and tray toast) and **Search Google**.
@@ -125,7 +125,7 @@ Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startu
 2. **Wait for the scan** — the desktop freezes, dims, and the top pill reports how many words were detected.
 3. **Interact**:
    - Click any underlined word, or drag across several, to select text. A pill appears with **Copy Text** and **Search Google**.
-   - Clicking or drawing anywhere that isn't text starts a freehand lasso. Release to capture that region as an image; drag the corner handles to adjust it.
+   - Dragging anywhere that isn't text draws a rectangular selection. Hold `Alt` (or `Shift`) while dragging for a freehand lasso instead. Release to capture that region as an image; drag the corner handles to adjust it.
 4. **Act** on the pill (copy, search, save), or press `Esc` to dismiss everything.
 
 ### Everyday examples
@@ -134,9 +134,9 @@ Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startu
 |---|---|
 | Copy text from a video, PDF, or app that blocks selection | Hotkey → click/drag the words → **Copy Text** (or `Ctrl + C`) |
 | Look up an error message | Hotkey → drag the message → **Search Google** |
-| Identify a product, landmark, or plant | Hotkey → circle it → **Search with Lens** |
-| Save a region as an image | Hotkey → lasso the region → **Save Image** → choose PNG/JPEG |
-| Reuse a screenshot in a chat | Hotkey → lasso the region → **Copy Image** → paste anywhere |
+| Identify a product, landmark, or plant | Hotkey → drag or circle it → **Search with Lens** |
+| Save a region as an image | Hotkey → drag around the region → **Save Image** → choose PNG/JPEG |
+| Reuse a screenshot in a chat | Hotkey → drag around the region → **Copy Image** → paste anywhere |
 | Grab text without clicking the pill | Enable **Auto-copy recognized text** in Settings — the selection is copied the moment you release the mouse |
 
 **Text mode** (words detected under the cursor):
@@ -149,7 +149,7 @@ Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startu
 | **Search Google** | Opens `https://www.google.com/search?q=…` in the default browser |
 | **Esc** | Cancels the snip immediately |
 
-**Image mode** (circle or drag a non-text region):
+**Image mode** (drag or circle a non-text region):
 
 | Action | Description |
 |---|---|
@@ -178,6 +178,7 @@ Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startu
 |---|---|---|
 | `Ctrl + Shift + S` | Global (default, configurable) | Trigger a snip |
 | `Ctrl + C` | Overlay, text selected | Copy the selected text and close the overlay |
+| `Alt` (or `Shift`) + drag | Overlay, non-text area | Freehand lasso instead of the default rectangular selection |
 | `Esc` | Overlay / shortcut recorder | Cancel the snip / stop recording |
 | `F1`–`F12` | Global | Function keys are valid hotkeys without any modifier |
 

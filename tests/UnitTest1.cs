@@ -1,6 +1,7 @@
 using System.Drawing;
 using OrbitOCR.Models;
 using OrbitOCR.Services;
+using OrbitOCR.UI;
 
 namespace OrbitOCR.Tests;
 
@@ -242,5 +243,20 @@ public class OrbitOcrTests
         Assert.IsNull(error, error?.ToString());
         Assert.IsTrue(firstRegistered, "First registration of the test combination should succeed");
         Assert.IsFalse(secondRegistered, "RegisterFromSettings must return false when the shortcut is already owned");
+    }
+
+    [TestMethod]
+    public void TestNormalizeRect_HandlesEveryDragDirection()
+    {
+        var expected = new System.Windows.Rect(10, 20, 40, 40);
+        var topLeft = new System.Windows.Point(10, 20);
+        var bottomRight = new System.Windows.Point(50, 60);
+        var topRight = new System.Windows.Point(50, 20);
+        var bottomLeft = new System.Windows.Point(10, 60);
+
+        Assert.AreEqual(expected, OverlayWindow.NormalizeRect(topLeft, bottomRight), "top-left -> bottom-right");
+        Assert.AreEqual(expected, OverlayWindow.NormalizeRect(bottomRight, topLeft), "bottom-right -> top-left");
+        Assert.AreEqual(expected, OverlayWindow.NormalizeRect(topRight, bottomLeft), "top-right -> bottom-left");
+        Assert.AreEqual(expected, OverlayWindow.NormalizeRect(bottomLeft, topRight), "bottom-left -> top-right");
     }
 }

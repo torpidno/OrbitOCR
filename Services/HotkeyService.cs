@@ -59,27 +59,69 @@ public class HotkeyService : IDisposable
         return IntPtr.Zero;
     }
 
+    /// <summary>The shortcut Windows has actually accepted, or null when none is registered.</summary>
+    public AppSettings? ActiveSettings { get; private set; }
+
     public bool RegisterFromSettings(AppSettings settings)
     {
+        // Remember what is live so a rejected change can be rolled back.
+        var previous = ActiveSettings;
+
         Unregister();
 
         if (_hwndSource == null) return false;
 
-        uint modifiers = MOD_NOREPEAT;
-        if (settings.HotkeyCtrl) modifiers |= MOD_CONTROL;
-        if (settings.HotkeyShift) modifiers |= MOD_SHIFT;
-        if (settings.HotkeyAlt) modifiers |= MOD_ALT;
-        if (settings.HotkeyWin) modifiers |= MOD_WIN;
+        if (TryRegister(settings))
+        {
+            ActiveSettings = HotkeySnapshot(settings);
+            return true;
+        }
 
+        // The requested combination is unavailable. Restore the last working one so the app
+        // is never left without a shortcut, and report the requested change as failed.
+        if (previous != null && TryRegister(previous))
+        {
+            ActiveSettings = previous;
+        }
+        else
+        {
+            ActiveSettings = null;
+        }
+
+        return false;
+    }
+
+    private bool TryRegister(AppSettings settings)
+    {
         uint vk = ParseVirtualKey(settings.HotkeyKey);
         if (vk == 0)
         {
             vk = 0x53; // 'S' key
         }
 
-        _isRegistered = RegisterHotKey(_hwndSource.Handle, HotkeyId, modifiers, vk);
+        _isRegistered = RegisterHotKey(_hwndSource!.Handle, HotkeyId, BuildModifiers(settings), vk);
         return _isRegistered;
     }
+
+    private static uint BuildModifiers(AppSettings settings)
+    {
+        uint modifiers = MOD_NOREPEAT;
+        if (settings.HotkeyCtrl) modifiers |= MOD_CONTROL;
+        if (settings.HotkeyShift) modifiers |= MOD_SHIFT;
+        if (settings.HotkeyAlt) modifiers |= MOD_ALT;
+        if (settings.HotkeyWin) modifiers |= MOD_WIN;
+        return modifiers;
+    }
+
+    /// <summary>Snapshot of just the shortcut fields, so later edits to the caller's object can't mutate it.</summary>
+    private static AppSettings HotkeySnapshot(AppSettings settings) => new()
+    {
+        HotkeyCtrl = settings.HotkeyCtrl,
+        HotkeyShift = settings.HotkeyShift,
+        HotkeyAlt = settings.HotkeyAlt,
+        HotkeyWin = settings.HotkeyWin,
+        HotkeyKey = settings.HotkeyKey
+    };
 
     public void Unregister()
     {

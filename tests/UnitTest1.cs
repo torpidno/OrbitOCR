@@ -257,6 +257,57 @@ public class OrbitOcrTests
     }
 
     [TestMethod]
+    public void TestHotkey_RejectedChangeRestoresPreviousShortcut()
+    {
+        Exception? error = null;
+        bool? initial = null;
+        bool? holderTook = null;
+        bool? changeRejected = null;
+        bool? previousStillHeld = null;
+        string? activeKey = null;
+
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var settingsService = new SettingsService();
+                using var service = new HotkeyService(settingsService);
+
+                var original = new AppSettings { HotkeyCtrl = true, HotkeyShift = true, HotkeyAlt = true, HotkeyKey = "F8" };
+                var taken = new AppSettings { HotkeyCtrl = true, HotkeyShift = true, HotkeyAlt = true, HotkeyKey = "F7" };
+
+                initial = service.RegisterFromSettings(original);
+
+                // Another window claims the combination we are about to request.
+                using var holder = new HotkeyService(settingsService);
+                holderTook = holder.RegisterFromSettings(taken);
+
+                // The change must fail ...
+                changeRejected = service.RegisterFromSettings(taken);
+                activeKey = service.ActiveSettings?.HotkeyKey;
+
+                // ... and the original shortcut must still be held by the service.
+                using var challenger = new HotkeyService(settingsService);
+                previousStillHeld = !challenger.RegisterFromSettings(original);
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join(TimeSpan.FromSeconds(30));
+
+        Assert.IsNull(error, error?.ToString());
+        Assert.IsTrue(initial, "The first shortcut should register");
+        Assert.IsTrue(holderTook, "The competing window should take its shortcut");
+        Assert.IsFalse(changeRejected, "Requesting a taken shortcut must report failure");
+        Assert.AreEqual("F8", activeKey, "The active shortcut must fall back to the previous one");
+        Assert.IsTrue(previousStillHeld, "The previous shortcut must be re-registered after a rejected change");
+    }
+
+    [TestMethod]
     public void TestNormalizeRect_HandlesEveryDragDirection()
     {
         var expected = new System.Windows.Rect(10, 20, 40, 40);

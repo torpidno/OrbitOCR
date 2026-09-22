@@ -65,7 +65,9 @@ public partial class App : Application
         _screenCaptureService = new ScreenCaptureService();
         _hotkeyService = new HotkeyService(_settingsService);
 
-        string hotkeyDisplay = FormatHotkeyString(_settingsService.Settings);
+        // The shortcut Windows actually accepted; null means the saved one was rejected.
+        var activeSettings = _hotkeyService.ActiveSettings;
+        string hotkeyDisplay = FormatHotkeyString(activeSettings ?? _settingsService.Settings);
         _trayIconService = new TrayIconService(hotkeyDisplay);
 
         // Wire service events
@@ -76,17 +78,40 @@ public partial class App : Application
 
         _settingsService.SettingsChanged += HandleSettingsChanged;
 
-        // Show welcome balloon on first launch if needed
-        _trayIconService.ShowNotification(
-            "OrbitOCR Running",
-            $"Press {hotkeyDisplay} anytime to freeze the screen and snip/circle text.");
+        // A rejected shortcut would otherwise be invisible: tell the user instead of silently doing nothing.
+        if (activeSettings == null)
+        {
+            _trayIconService.ShowNotification(
+                "OrbitOCR: shortcut unavailable",
+                $"{hotkeyDisplay} is already in use by another app. Open Settings to choose a different shortcut.");
+        }
+        else
+        {
+            _trayIconService.ShowNotification(
+                "OrbitOCR Running",
+                $"Press {hotkeyDisplay} anytime to freeze the screen and snip/circle text.");
+        }
     }
 
     private void HandleSettingsChanged(AppSettings newSettings)
     {
-        string hotkeyDisplay = FormatHotkeyString(newSettings);
-        _trayIconService.UpdateHotkeyDisplay(hotkeyDisplay);
+        // The tray shortcut text is synced by TryRegisterHotkey only when a change actually
+        // registers, so a rejected shortcut never overwrites the active one.
         _ocrService.InitializeEngine(newSettings.PreferredOcrLanguage);
+    }
+
+    /// <summary>
+    /// Registers the requested shortcut and syncs the tray to what is actually active.
+    /// Returns false (leaving the previous shortcut live) when the change is rejected.
+    /// </summary>
+    private bool TryRegisterHotkey(AppSettings settings)
+    {
+        bool registered = _hotkeyService.RegisterFromSettings(settings);
+        if (registered)
+        {
+            _trayIconService.UpdateHotkeyDisplay(FormatHotkeyString(_hotkeyService.ActiveSettings ?? settings));
+        }
+        return registered;
     }
 
     private async void HandleSnipTriggered()
@@ -141,7 +166,7 @@ public partial class App : Application
         _settingsWindow = new SettingsWindow(
             _settingsService,
             _ocrService,
-            s => _hotkeyService.RegisterFromSettings(s),
+            TryRegisterHotkey,
             HandleSnipTriggered,
             HandleExit);
 

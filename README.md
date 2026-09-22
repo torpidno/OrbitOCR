@@ -182,7 +182,7 @@ Output: `./publish/OrbitOCR.exe` — copy it to any folder, USB drive, or startu
 | `Esc` | Overlay / shortcut recorder | Cancel the snip / stop recording |
 | `F1`–`F12` | Global | Function keys are valid hotkeys without any modifier |
 
-Hotkey validation: a combination must include at least one of `Ctrl`, `Shift`, `Alt`, `Win`, **or** be a function key (`F1`–`F12`). Assignments that would swallow ordinary typing are rejected when saving.
+Hotkey validation: a combination must include at least one of `Ctrl`, `Shift`, `Alt`, `Win`, **or** be a function key (`F1`–`F12`). Assignments that would swallow ordinary typing are rejected when saving. If Windows itself refuses a combination (another app already owns it), OrbitOCR keeps the previously working shortcut active and shows a warning instead of leaving you without one.
 
 ### Settings window
 

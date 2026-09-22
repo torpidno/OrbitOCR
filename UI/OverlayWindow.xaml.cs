@@ -567,32 +567,33 @@ public partial class OverlayWindow : Window
         UpdateDimensionsBadge(rect);
     }
 
+    /// <summary>Clamps a selection rectangle to the canvas bounds, never returning a negative size.</summary>
+    internal static Rect ClampToBounds(Rect rect, double maxWidth, double maxHeight)
+    {
+        double left = Math.Max(0, rect.Left);
+        double top = Math.Max(0, rect.Top);
+        double right = Math.Min(maxWidth, rect.Right);
+        double bottom = Math.Min(maxHeight, rect.Bottom);
+
+        return new Rect(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
+    }
+
     /// <summary>
     /// Finalizes an image/region selection: normalizes bounds, clamps them to the canvas,
     /// then shows the action pill exactly like the existing image flow.
     /// </summary>
     private void CompleteImageSelection(Rect rect)
     {
-        if (rect.Width < 12 || rect.Height < 12)
+        var clamped = ClampToBounds(rect, SelectionCanvas.ActualWidth, SelectionCanvas.ActualHeight);
+
+        if (clamped.Width < 12 || clamped.Height < 12)
         {
             HideImageSelectionVisuals();
             UpdateDimmedMask(Rect.Empty);
             return;
         }
 
-        double left = Math.Max(0, rect.Left);
-        double top = Math.Max(0, rect.Top);
-        double right = Math.Min(SelectionCanvas.ActualWidth, rect.Right);
-        double bottom = Math.Min(SelectionCanvas.ActualHeight, rect.Bottom);
-
-        if (right - left < 12 || bottom - top < 12)
-        {
-            HideImageSelectionVisuals();
-            UpdateDimmedMask(Rect.Empty);
-            return;
-        }
-
-        _circledRect = new Rect(left, top, right - left, bottom - top);
+        _circledRect = clamped;
         ShowImageSelectionVisuals(_circledRect);
         ProcessCircledImage();
     }

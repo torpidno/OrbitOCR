@@ -208,6 +208,7 @@ public class OrbitOcrTests
         Exception? error = null;
         bool? firstRegistered = null;
         bool? secondRegistered = null;
+        bool? recovered = null;
 
         var thread = new Thread(() =>
         {
@@ -230,6 +231,15 @@ public class OrbitOcrTests
                 // A second window claiming the same combination must be told it failed.
                 using var challenger = new HotkeyService(settingsService);
                 secondRegistered = challenger.RegisterFromSettings(combo);
+
+                // ...and it must still be able to register a free combination afterwards.
+                recovered = challenger.RegisterFromSettings(new AppSettings
+                {
+                    HotkeyCtrl = true,
+                    HotkeyShift = true,
+                    HotkeyAlt = true,
+                    HotkeyKey = "F9"
+                });
             }
             catch (Exception ex)
             {
@@ -243,6 +253,7 @@ public class OrbitOcrTests
         Assert.IsNull(error, error?.ToString());
         Assert.IsTrue(firstRegistered, "First registration of the test combination should succeed");
         Assert.IsFalse(secondRegistered, "RegisterFromSettings must return false when the shortcut is already owned");
+        Assert.IsTrue(recovered, "After a rejected shortcut the service must still register a free one");
     }
 
     [TestMethod]
@@ -258,5 +269,34 @@ public class OrbitOcrTests
         Assert.AreEqual(expected, OverlayWindow.NormalizeRect(bottomRight, topLeft), "bottom-right -> top-left");
         Assert.AreEqual(expected, OverlayWindow.NormalizeRect(topRight, bottomLeft), "top-right -> bottom-left");
         Assert.AreEqual(expected, OverlayWindow.NormalizeRect(bottomLeft, topRight), "bottom-left -> top-right");
+    }
+
+    [TestMethod]
+    public void TestRectangleSelection_ClampsToCanvasBounds()
+    {
+        // Fully inside the canvas: unchanged
+        Assert.AreEqual(
+            new System.Windows.Rect(10, 20, 40, 40),
+            OverlayWindow.ClampToBounds(new System.Windows.Rect(10, 20, 40, 40), 100, 100));
+
+        // Overflows the right/bottom edges: trimmed to the canvas
+        Assert.AreEqual(
+            new System.Windows.Rect(80, 80, 20, 20),
+            OverlayWindow.ClampToBounds(new System.Windows.Rect(80, 80, 50, 50), 100, 100));
+
+        // Starts off-canvas (negative origin): pulled back to 0,0
+        Assert.AreEqual(
+            new System.Windows.Rect(0, 0, 30, 30),
+            OverlayWindow.ClampToBounds(new System.Windows.Rect(-10, -10, 40, 40), 100, 100));
+
+        // Larger than the canvas: clamped to the whole canvas
+        Assert.AreEqual(
+            new System.Windows.Rect(0, 0, 100, 100),
+            OverlayWindow.ClampToBounds(new System.Windows.Rect(0, 0, 200, 200), 100, 100));
+
+        // Entirely outside: collapses to a zero-size rectangle
+        var outside = OverlayWindow.ClampToBounds(new System.Windows.Rect(120, 120, 20, 20), 100, 100);
+        Assert.AreEqual(0, outside.Width);
+        Assert.AreEqual(0, outside.Height);
     }
 }

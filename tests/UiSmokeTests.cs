@@ -41,7 +41,7 @@ public class UiSmokeTests
                 menu.ShowForTextSelection("hello world", 2);
                 menu.ShowForImageSelection(120, 80, "detected text");
                 Measure(menu, 520, 140);
-                Measure((FrameworkElement)new SettingsWindow(settings, ocr, () => { }, () => { }).Content, 640, 720);
+                Measure((FrameworkElement)new SettingsWindow(settings, ocr, _ => true, () => { }, () => { }).Content, 640, 720);
 
                 using var bitmap = new Bitmap(200, 120);
                 var bounds = new ScreenCaptureService().GetVirtualScreenBounds();

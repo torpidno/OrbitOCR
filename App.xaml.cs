@@ -141,6 +141,7 @@ public partial class App : Application
         _settingsWindow = new SettingsWindow(
             _settingsService,
             _ocrService,
+            s => _hotkeyService.RegisterFromSettings(s),
             HandleSnipTriggered,
             HandleExit);
 

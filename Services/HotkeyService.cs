@@ -24,17 +24,13 @@ public class HotkeyService : IDisposable
 
     private HwndSource? _hwndSource;
     private bool _isRegistered;
-    private readonly SettingsService _settingsService;
 
     public event Action? HotkeyTriggered;
 
     public HotkeyService(SettingsService settingsService)
     {
-        _settingsService = settingsService;
         InitializeHwndSource();
-        RegisterFromSettings(_settingsService.Settings);
-
-        _settingsService.SettingsChanged += OnSettingsChanged;
+        RegisterFromSettings(settingsService.Settings);
     }
 
     private void InitializeHwndSource()
@@ -61,11 +57,6 @@ public class HotkeyService : IDisposable
             handled = true;
         }
         return IntPtr.Zero;
-    }
-
-    private void OnSettingsChanged(AppSettings settings)
-    {
-        RegisterFromSettings(settings);
     }
 
     public bool RegisterFromSettings(AppSettings settings)

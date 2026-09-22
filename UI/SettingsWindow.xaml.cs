@@ -17,6 +17,7 @@ public partial class SettingsWindow : Window
 
     private readonly SettingsService _settingsService;
     private readonly OcrService _ocrService;
+    private readonly Func<AppSettings, bool> _registerHotkey;
     private readonly Action _onTriggerSnip;
     private readonly Action _onExit;
 
@@ -31,6 +32,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(
         SettingsService settingsService,
         OcrService ocrService,
+        Func<AppSettings, bool> registerHotkey,
         Action onTriggerSnip,
         Action onExit)
     {
@@ -38,6 +40,7 @@ public partial class SettingsWindow : Window
 
         _settingsService = settingsService;
         _ocrService = ocrService;
+        _registerHotkey = registerHotkey;
         _onTriggerSnip = onTriggerSnip;
         _onExit = onExit;
 
@@ -97,6 +100,7 @@ public partial class SettingsWindow : Window
     private void CancelAndHide()
     {
         LoadCurrentSettings();
+        HideStatus();
         Hide();
     }
 
@@ -271,11 +275,39 @@ public partial class SettingsWindow : Window
         _settingsService.SaveSettings(newSettings);
         _ocrService.InitializeEngine(newSettings.PreferredOcrLanguage);
 
+        string hotkeyDisplay = App.FormatHotkeyString(newSettings);
+
+        // Settings are persisted, but the shortcut only works if Windows accepts it.
+        // Report the failure instead of claiming success.
+        if (!_registerHotkey(newSettings))
+        {
+            ShowStatus($"Failed to register {hotkeyDisplay} — the shortcut may already be in use by another application. Try a different combination.");
+            return;
+        }
+
+        HideStatus();
+
         MessageBox.Show(
-            $"Settings applied!\nNew Global Shortcut: {App.FormatHotkeyString(newSettings)}\n\nPress this shortcut anytime anywhere in Windows to trigger OrbitOCR.",
+            $"Settings applied!\nNew Global Shortcut: {hotkeyDisplay}\n\nPress this shortcut anytime anywhere in Windows to trigger OrbitOCR.",
             "OrbitOCR Settings Saved",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    /// <summary>
+    /// Shows a non-blocking, form-level warning. The window stays open so the user can
+    /// immediately record a different shortcut.
+    /// </summary>
+    private void ShowStatus(string message)
+    {
+        TxtStatus.Text = message;
+        TxtStatus.Visibility = Visibility.Visible;
+    }
+
+    private void HideStatus()
+    {
+        TxtStatus.Text = string.Empty;
+        TxtStatus.Visibility = Visibility.Collapsed;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -315,6 +347,7 @@ public partial class SettingsWindow : Window
         // Closing hides to tray; discard unsaved edits so Cancel and the X button agree.
         e.Cancel = true;
         LoadCurrentSettings();
+        HideStatus();
         Hide();
     }
 }

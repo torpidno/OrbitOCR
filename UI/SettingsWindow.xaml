@@ -147,6 +147,12 @@
                               AutomationProperties.Name="OCR language"/>
                 </Grid>
             </Border>
+
+            <!-- Save / hotkey-registration status -->
+            <TextBlock x:Name="TxtStatus" Visibility="Collapsed"
+                       Margin="0,16,0,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource DangerBrush}"
+                       AutomationProperties.LiveSetting="Assertive"/>
         </StackPanel>
 
         <!-- ===== Footer ===== -->

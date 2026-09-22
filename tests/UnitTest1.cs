@@ -200,4 +200,47 @@ public class OrbitOcrTests
             png.Take(8).ToArray(),
             "PNG signature mismatch");
     }
+
+    [TestMethod]
+    public void TestHotkey_SecondRegistrationOfSameCombinationFails()
+    {
+        Exception? error = null;
+        bool? firstRegistered = null;
+        bool? secondRegistered = null;
+
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var settingsService = new SettingsService();
+
+                // Obscure combination so the test never collides with a real app.
+                var combo = new AppSettings
+                {
+                    HotkeyCtrl = true,
+                    HotkeyShift = true,
+                    HotkeyAlt = true,
+                    HotkeyKey = "F11"
+                };
+
+                using var owner = new HotkeyService(settingsService);
+                firstRegistered = owner.RegisterFromSettings(combo);
+
+                // A second window claiming the same combination must be told it failed.
+                using var challenger = new HotkeyService(settingsService);
+                secondRegistered = challenger.RegisterFromSettings(combo);
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join(TimeSpan.FromSeconds(30));
+
+        Assert.IsNull(error, error?.ToString());
+        Assert.IsTrue(firstRegistered, "First registration of the test combination should succeed");
+        Assert.IsFalse(secondRegistered, "RegisterFromSettings must return false when the shortcut is already owned");
+    }
 }
